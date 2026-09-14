@@ -1,5 +1,6 @@
 import {
   COOLDOWN_MS,
+  COSTUMES,
   DUNGEON,
   ENEMIES,
   ENERGY_MS,
@@ -9,7 +10,9 @@ import {
   MAX_ENERGY,
   QUESTS,
   REGIONS,
+  STARTER_COSTUME_IDS,
   type Enemy,
+  type Gender,
   type Slot,
   type Stat,
 } from './content';
@@ -34,7 +37,15 @@ export type Battle = {
   at: number;
   dungeon: boolean;
 };
+export type CharacterAppearance = {
+  gender: Gender | null;
+  activeCostumeId: string | null;
+};
 export type GameState = {
+  saveVersion: 1;
+  characterCreated: boolean;
+  appearance: CharacterAppearance;
+  ownedCostumeIds: string[];
   name: string;
   level: number;
   xp: number;
@@ -67,10 +78,17 @@ export type Action =
   | { type: 'sell'; itemId: string }
   | { type: 'heal' }
   | { type: 'claim'; questId: string }
-  | { type: 'rename'; name: string };
+  | { type: 'rename'; name: string }
+  | { type: 'createCharacter'; gender: Gender; name: string }
+  | { type: 'setGender'; gender: Gender }
+  | { type: 'wearCostume'; costumeId: string | null };
 export class GameError extends Error {}
 export function newGame(now = Date.now()): GameState {
   return {
+    saveVersion: 1,
+    characterCreated: false,
+    appearance: { gender: null, activeCostumeId: null },
+    ownedCostumeIds: [...STARTER_COSTUME_IDS],
     name: 'پهلوان تازه‌نفس',
     level: 1,
     xp: 0,
@@ -93,6 +111,97 @@ export function newGame(now = Date.now()): GameState {
     history: [],
     lastActionId: null,
   };
+}
+const knownCostumes = new Set<string>(COSTUMES.map((c) => c.id));
+export function normalizeSave(input: GameState): GameState {
+  const s = structuredClone(input);
+  const raw = input as GameState & {
+    appearance?: { gender?: unknown; activeCostumeId?: unknown };
+    ownedCostumeIds?: unknown;
+    characterCreated?: unknown;
+  };
+  const gender =
+    raw.appearance?.gender === 'female' || raw.appearance?.gender === 'male'
+      ? raw.appearance.gender
+      : null;
+  const owned = [
+    ...new Set([
+      ...(Array.isArray(raw.ownedCostumeIds)
+        ? raw.ownedCostumeIds.filter(
+            (id): id is string =>
+              typeof id === 'string' && knownCostumes.has(id),
+          )
+        : []),
+      ...STARTER_COSTUME_IDS,
+    ]),
+  ];
+  const costume =
+    typeof raw.appearance?.activeCostumeId === 'string' &&
+    owned.includes(raw.appearance.activeCostumeId)
+      ? raw.appearance.activeCostumeId
+      : null;
+  s.saveVersion = 1;
+  s.appearance = { gender, activeCostumeId: costume };
+  s.ownedCostumeIds = owned;
+  s.characterCreated = raw.characterCreated === true && gender !== null;
+  return s;
+}
+export function playableGame(
+  now = Date.now(),
+  gender: Gender = 'female',
+): GameState {
+  return transition(
+    newGame(now),
+    { type: 'createCharacter', gender, name: 'پهلوان تازه‌نفس' },
+    now,
+  ).state;
+}
+export function returningForAppearance(s: GameState) {
+  const n = normalizeSave(s);
+  return (
+    !n.characterCreated &&
+    (n.level > 1 ||
+      n.wins > 0 ||
+      n.xp > 0 ||
+      n.claimed.length > 0 ||
+      n.training > 0 ||
+      n.dungeonClears > 0 ||
+      n.dungeonStage > 0 ||
+      n.gold !== 350 ||
+      n.history.length > 0)
+  );
+}
+function parseGender(value: unknown): Gender {
+  if (value === 'female' || value === 'male') return value;
+  throw new GameError('برای ادامه، جنسیت پهلوانت را انتخاب کن.');
+}
+function parseName(value: unknown) {
+  const name = typeof value === 'string' ? value.trim() : '';
+  if (
+    name.length < 2 ||
+    name.length > 24 ||
+    name.split('').some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127) ||
+    /[<>]/.test(name)
+  )
+    throw new GameError('نام پهلوان باید بین ۲ تا ۲۴ نویسه باشد.');
+  return name;
+}
+export function previewEquipment(
+  input: GameState,
+  slot: Slot,
+  itemId: string | null,
+): GameState {
+  const s = structuredClone(input);
+  s.equipment[slot] = itemId;
+  return s;
+}
+export function previewCostume(
+  input: GameState,
+  costumeId: string | null,
+): GameState {
+  const s = structuredClone(input);
+  s.appearance = { ...s.appearance, activeCostumeId: costumeId };
+  return s;
 }
 export function derived(s: GameState) {
   const gear = Object.values(s.equipment)
@@ -182,8 +291,10 @@ export function transition(
   now = Date.now(),
   random: () => number = Math.random,
 ): { state: GameState; message: string; battle?: Battle } {
-  const s = regenerate(input, now);
+  const s = regenerate(normalizeSave(input), now);
   let message = 'انجام شد.';
+  if (!s.characterCreated && action.type !== 'createCharacter')
+    throw new GameError('ابتدا جنسیت پهلوانت را انتخاب کن.');
   if (action.type === 'fight' || action.type === 'dungeon') {
     const dungeon = action.type === 'dungeon';
     const e = dungeon
@@ -353,19 +464,40 @@ export function transition(
     awardXp(s, q.xp);
     message = 'پاداش مأموریت را دریافت کردی!';
   } else if (action.type === 'rename') {
-    const name = typeof action.name === 'string' ? action.name.trim() : '';
-    if (
-      typeof name !== 'string' ||
-      name.length < 2 ||
-      name.length > 24 ||
-      name
-        .split('')
-        .some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127) ||
-      /[<>]/.test(name)
-    )
-      throw new GameError('نام پهلوان باید بین ۲ تا ۲۴ نویسه باشد.');
-    s.name = name;
+    s.name = parseName(action.name);
     message = 'نام پهلوان ثبت شد.';
+  } else if (action.type === 'createCharacter') {
+    const gender = parseGender(action.gender);
+    const name = parseName(action.name);
+    if (s.characterCreated) {
+      if (s.appearance.gender === gender && s.name === name)
+        message = 'ظاهر پهلوان قبلاً ثبت شده است.';
+      else
+        throw new GameError(
+          'ظاهر پهلوان قبلاً ثبت شده است. برای تغییر جنسیت از ویرایش ظاهر استفاده کن.',
+        );
+    } else {
+      s.appearance.gender = gender;
+      s.name = name;
+      s.characterCreated = true;
+      message = returningForAppearance(input)
+        ? 'ظاهر پهلوان ثبت شد. پیشرفتت محفوظ است.'
+        : 'پهلوانت آماده است. ظاهر و تجهیزات را در بخش پهلوان ببین.';
+    }
+  } else if (action.type === 'setGender') {
+    s.appearance.gender = parseGender(action.gender);
+    message = 'ظاهر پهلوان به‌روز شد.';
+  } else if (action.type === 'wearCostume') {
+    if (action.costumeId === null) {
+      s.appearance.activeCostumeId = null;
+      message = 'نمای تجهیزات نمایش داده می‌شود.';
+    } else {
+      const costume = COSTUMES.find((c) => c.id === action.costumeId);
+      if (!costume || !s.ownedCostumeIds.includes(costume.id))
+        throw new GameError('این پوشاک در گنجینهٔ تو نیست.');
+      s.appearance.activeCostumeId = costume.id;
+      message = `${costume.name} را پوشیدی.`;
+    }
   } else throw new GameError('درخواست نامعتبر است.');
   return { state: s, message };
 }

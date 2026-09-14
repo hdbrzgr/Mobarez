@@ -5,11 +5,14 @@ import {
   enemyUnlocked,
   GameError,
   newGame,
+  normalizeSave,
+  playableGame,
   questProgress,
   regenerate,
   transition,
 } from '../lib/game/engine';
 import {
+  COSTUMES,
   DUNGEON,
   ENEMIES,
   ENERGY_MS,
@@ -20,7 +23,7 @@ import {
 const start = 1_000_000;
 const stable = () => 0.5;
 void test('starter can win first expedition and receives persistent rewards without mutating input', () => {
-  const s = newGame(start);
+  const s = playableGame(start);
   const r = transition(s, { type: 'fight', enemyId: 'wolf' }, start, stable);
   assert.ok(r.battle?.won);
   assert.equal(r.state.energy, 11);
@@ -33,7 +36,7 @@ void test('starter can win first expedition and receives persistent rewards with
   assert.ok(enemyUnlocked(r.state, ENEMIES[1]));
 });
 void test('unavailable enemies, regions and dungeons are rejected', () => {
-  const s = newGame(start);
+  const s = playableGame(start);
   for (const action of [
     { type: 'fight', enemyId: 'captain' },
     { type: 'fight', enemyId: 'forest-wolf' },
@@ -43,7 +46,7 @@ void test('unavailable enemies, regions and dungeons are rejected', () => {
 });
 void test('cooldown and energy cannot be bypassed by another action', () => {
   const r = transition(
-    newGame(start),
+    playableGame(start),
     { type: 'fight', enemyId: 'wolf' },
     start,
     stable,
@@ -58,7 +61,7 @@ void test('cooldown and energy cannot be bypassed by another action', () => {
       ),
     GameError,
   );
-  const s = newGame(start);
+  const s = playableGame(start);
   s.energy = 0;
   assert.throws(
     () => transition(s, { type: 'fight', enemyId: 'wolf' }, start, stable),
@@ -79,7 +82,7 @@ void test('regeneration respects elapsed time, partial intervals and caps', () =
   assert.equal(regenerate(s, start - 1000).energy, 2);
 });
 void test('spending, equipment swaps, food and selling enforce inventory ownership', () => {
-  let s = newGame(start);
+  let s = playableGame(start);
   s = transition(s, { type: 'buy', itemId: 'bronze-blade' }, start).state;
   assert.equal(s.gold, 170);
   assert.equal(derived(s).attack, 14);
@@ -106,7 +109,7 @@ void test('spending, equipment swaps, food and selling enforce inventory ownersh
   assert.equal(s.food, 2);
 });
 void test('quests pay once and cannot be claimed early', () => {
-  let s = newGame(start);
+  let s = playableGame(start);
   assert.throws(
     () => transition(s, { type: 'claim', questId: 'first' }, start),
     GameError,
@@ -121,7 +124,7 @@ void test('quests pay once and cannot be claimed early', () => {
   );
 });
 void test('level gains apply stats and refill health even for multiple levels', () => {
-  let s = newGame(start);
+  let s = playableGame(start);
   s.wins = 3;
   s.xp = 79;
   s.hp = 22;
@@ -133,7 +136,7 @@ void test('level gains apply stats and refill health even for multiple levels', 
   assert.equal(s.hp, derived(s).maxHp);
 });
 void test('defeat has no victory rewards and player recovers from one health', () => {
-  const s = newGame(start);
+  const s = playableGame(start);
   s.hp = 20;
   s.stats.strength = 0;
   s.equipment.weapon = null;
@@ -156,7 +159,7 @@ void test('defeat has no victory rewards and player recovers from one health', (
   assert.ok(regenerate(r.state, start + 4 * HEAL_MS).hp >= 20);
 });
 void test('dungeon stages persist, finish with guaranteed relic, and reset for replay', () => {
-  let s = newGame(start);
+  let s = playableGame(start);
   s.level = 5;
   s.stats.strength = 100;
   s.stats.vitality = 100;
@@ -172,7 +175,7 @@ void test('dungeon stages persist, finish with guaranteed relic, and reset for r
   assert.equal(s.history[0].enemyId, DUNGEON[2].id);
 });
 void test('full inventory converts loot to coins and duplicate equipped items may be sold safely', () => {
-  const s = newGame(start);
+  const s = playableGame(start);
   s.inventory = Array(40).fill('iron-blade');
   const r = transition(s, { type: 'fight', enemyId: 'wolf' }, start, stable);
   assert.equal(r.state.inventory.length, 40);
@@ -187,7 +190,7 @@ void test('full inventory converts loot to coins and duplicate equipped items ma
   assert.equal(sold.equipment.weapon, 'iron-blade');
 });
 void test('training cost cannot create negative balance and health tracks equipment capacity', () => {
-  let s = newGame(start);
+  let s = playableGame(start);
   s.gold = 0;
   assert.throws(
     () => transition(s, { type: 'train', stat: 'strength' }, start),
@@ -211,7 +214,7 @@ void test('seeded first encounter consistently supports a new player', () => {
       return n / 4294967296;
     };
     const r = transition(
-      newGame(start),
+      playableGame(start),
       { type: 'fight', enemyId: 'wolf' },
       start,
       rng,
@@ -227,4 +230,99 @@ void test('all items and enemies have valid economy and battle values', () => {
     assert.ok(i.price > 0 && i.attack >= 0 && i.armor >= 0);
   for (const e of [...ENEMIES, ...DUNGEON])
     assert.ok(e.hp > 0 && e.attack > 0 && e.gold > 0 && e.xp > 0);
+  for (const c of COSTUMES) assert.ok(c.id && c.name);
+});
+void test('new saves cannot fight until gender is chosen and creation does not grant extra items', () => {
+  const fresh = newGame(start);
+  assert.equal(fresh.characterCreated, false);
+  assert.equal(fresh.appearance.gender, null);
+  assert.throws(
+    () =>
+      transition(fresh, { type: 'fight', enemyId: 'wolf' }, start, stable),
+    GameError,
+  );
+  const created = transition(
+    fresh,
+    { type: 'createCharacter', gender: 'female', name: 'آذر' },
+    start,
+  ).state;
+  assert.equal(created.characterCreated, true);
+  assert.equal(created.appearance.gender, 'female');
+  assert.equal(created.name, 'آذر');
+  assert.deepEqual(created.inventory, ['iron-blade', 'leather']);
+  assert.equal(created.gold, 350);
+  const again = transition(
+    created,
+    { type: 'createCharacter', gender: 'female', name: 'آذر' },
+    start,
+  );
+  assert.equal(again.state.inventory.length, 2);
+  assert.throws(
+    () =>
+      transition(
+        created,
+        { type: 'createCharacter', gender: 'male', name: 'آذر' },
+        start,
+      ),
+    GameError,
+  );
+});
+void test('legacy saves migrate appearance once and keep progress', () => {
+  const progressed = playableGame(start);
+  progressed.gold = 880;
+  progressed.wins = 4;
+  progressed.level = 3;
+  progressed.xp = 20;
+  progressed.claimed = ['first'];
+  const raw = JSON.parse(JSON.stringify(progressed)) as Record<string, unknown>;
+  delete raw.saveVersion;
+  delete raw.characterCreated;
+  delete raw.appearance;
+  delete raw.ownedCostumeIds;
+  const migrated = normalizeSave(raw as typeof progressed);
+  assert.equal(migrated.characterCreated, false);
+  assert.equal(migrated.gold, 880);
+  assert.equal(migrated.wins, 4);
+  assert.equal(migrated.level, 3);
+  assert.deepEqual(migrated.inventory, progressed.inventory);
+  assert.equal(migrated.ownedCostumeIds.length, 2);
+  const finished = transition(
+    migrated,
+    { type: 'createCharacter', gender: 'male', name: 'رستم' },
+    start,
+  ).state;
+  assert.equal(finished.characterCreated, true);
+  assert.equal(finished.gold, 880);
+  assert.equal(finished.wins, 4);
+  assert.equal(finished.inventory.length, progressed.inventory.length);
+});
+void test('gender and costumes change appearance only', () => {
+  const female = playableGame(start, 'female');
+  const male = playableGame(start, 'male');
+  assert.deepEqual(derived(female), derived(male));
+  const swapped = transition(
+    female,
+    { type: 'setGender', gender: 'male' },
+    start,
+  ).state;
+  assert.equal(swapped.appearance.gender, 'male');
+  assert.deepEqual(derived(swapped), derived(female));
+  const dressed = transition(
+    swapped,
+    { type: 'wearCostume', costumeId: 'ceremonial' },
+    start,
+  ).state;
+  assert.equal(dressed.appearance.activeCostumeId, 'ceremonial');
+  assert.deepEqual(derived(dressed), derived(female));
+  assert.throws(
+    () =>
+      transition(female, { type: 'wearCostume', costumeId: 'invented' }, start),
+    GameError,
+  );
+  const cleared = transition(
+    dressed,
+    { type: 'wearCostume', costumeId: null },
+    start,
+  ).state;
+  assert.equal(cleared.appearance.activeCostumeId, null);
 });

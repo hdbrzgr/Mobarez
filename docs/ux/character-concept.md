@@ -1,0 +1,15 @@
+# Character UX concept provenance
+
+- Date: 14 September 2026.
+- Method: built-in imagegen; no CLI/API fallback.
+- Asset: [character-concept.png](character-concept.png), copied into this repository from the generated output.
+- Purpose: explore the visual direction for first-time gender selection and the full-body equipment/wardrobe screen.
+- Status: original static design concept, not a screenshot of implemented gameplay and not a production sprite set.
+
+The image was visually inspected in the generation output. Female/male choices, a full-body equipped female character, equipment slots and costume options are visible. Generated decorative navigation and the helmet thumbnail exceed the current three-slot feature scope; the [UX specification](../UX.md) defines what will actually be implemented. Persian microcopy, spacing and final art alignment still need production review.
+
+## Exact prompt
+
+```text
+Use case: ui-mockup. Create one high-fidelity desktop UX concept image for original Persian browser RPG «مبارز», an ancient myth-inspired Iranian PvE game. This is a DESIGN CONCEPT, not an implementation screenshot. A wide landscape presentation with TWO distinct screens side-by-side, split equally. Entire design dark olive charcoal #171b14, antique gold #cfb77d, parchment-colored typography, subtle Iranian carved stone and cypress details, elegant premium restrained RPG interface, original realistic painterly Persian character art. Readable properly joined Persian RTL interface. LEFT SCREEN is first-time character creation: heading «پهلوانت را بساز», two equally prominent portrait choice cards for an adult female and adult male Persian warrior, female wearing practical full-coverage tunic and trousers with braided dark hair, male wearing practical tunic trousers with tied dark hair; equal agency and strength, no sexualized armor. Clear choice labels «زن» and «مرد», one selected with gold border. Name field «نام پهلوان» with sample «آذر». Bottom primary button «آغاز ماجراجویی». RIGHT SCREEN is the character equipment screen: heading «پهلوان», character name «آذر», tabs «تجهیزات» and «پوشاک». Show an original FULL-BODY adult female Iranian warrior wearing bronze scale armor over a teal tunic, trousers and boots, holding a sword, on a dark carved-stone character stage. Three labeled square equipment slots arranged alongside the character labeled «سلاح», «زره», «نشان». Beside or below the stage is a compact inventory row with three clearly drawn equipment icons. A smaller costume choice section shows a travel outfit and a crimson/gold ceremonial cloak, label «پوشاک». Character figure is dominant and readable from head to boots, contained in its panel. No Roman colosseum, no Gameforge or Gladiatus branding, no ads, no real-money shop, no huge sidebar. Maintain realistic usable panel proportions, visually distinct gender choice vs equipment panels, clear action hierarchy and legible Persian labels. No English text or watermark. Landscape 1536x1024 or wider.
+```

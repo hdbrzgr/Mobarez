@@ -26,6 +26,15 @@ const post = async (action, revision, requestId = crypto.randomUUID()) => {
 };
 assert.equal((await fetch(`${origin}/api/game`)).status, 401);
 let s = await get();
+if (!s.state.characterCreated) {
+  const created = await post(
+    { type: 'createCharacter', gender: 'female', name: 'پهلوان آزمون' },
+    s.revision,
+  );
+  assert.equal(created.status, 200);
+  assert.equal(created.data.state.characterCreated, true);
+  s = await get();
+}
 const action = { type: 'rename', name: 'پهلوان آزمون' };
 const id = crypto.randomUUID();
 const first = await post(action, s.revision, id);

@@ -2,6 +2,7 @@ import { getDb } from '@/db';
 import {
   GameError,
   newGame,
+  normalizeSave,
   regenerate,
   transition,
   type Action,
@@ -51,7 +52,7 @@ export async function GET(request: Request) {
     const p = await player(request);
     const now = Date.now();
     return reply({
-      state: regenerate(p.state, now),
+      state: regenerate(normalizeSave(p.state), now),
       revision: p.revision,
       now,
     });
@@ -97,9 +98,10 @@ export async function POST(request: Request) {
       return reply({ error: 'درخواست نامعتبر است.' }, 400);
     const p = await player(request);
     const now = Date.now();
-    if (p.state.lastActionId === body.requestId)
+    const state = normalizeSave(p.state);
+    if (state.lastActionId === body.requestId)
       return reply({
-        state: regenerate(p.state, now),
+        state: regenerate(state, now),
         revision: p.revision,
         now,
         message: 'این درخواست قبلاً ثبت شده است.',
@@ -109,13 +111,13 @@ export async function POST(request: Request) {
         {
           error:
             'بازی در پنجرهٔ دیگری تغییر کرده است. اطلاعات به‌روز شد؛ دوباره اقدام کن.',
-          state: regenerate(p.state, now),
+          state: regenerate(state, now),
           revision: p.revision,
           now,
         },
         409,
       );
-    const result = transition(p.state, body.action, now);
+    const result = transition(state, body.action, now);
     result.state.lastActionId = body.requestId;
     const update = await p.db
       .prepare(

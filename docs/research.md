@@ -43,4 +43,6 @@ These are design intentions. Only starter-fight viability was checked with seede
 
 ## Next release candidates
 
-Public account and recovery flow; distinct art for each region/boss; save-schema migrations; repeatable quests; dungeon party roles; structured operational metrics and balancing tools. PvP, guilds, auctions and monetization remain outside the requested PvE MVP.
+The expanded Gladiatus-system inventory, Iranian names, and G1–G5 waves live in [gladiatus-adaptation.md](gladiatus-adaptation.md). Prefix/suffix items, six trainable stats (including فرّه and خرد), and honour titles are specified there for G2.
+
+Public account and recovery flow remain P3. PvP, guilds, and auctions are G5 and need an explicit product go-ahead. Monetization (rubies, Centurio, real-money shop) stays out of scope.

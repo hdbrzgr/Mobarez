@@ -1,5 +1,6 @@
 export type Stat = 'strength' | 'agility' | 'vitality' | 'luck';
 export type Slot = 'weapon' | 'armor' | 'charm';
+export type Gender = 'female' | 'male';
 export type Item = {
   id: string;
   name: string;
@@ -21,6 +22,25 @@ export const SLOT_NAMES: Record<Slot, string> = {
   armor: 'زره',
   charm: 'نشان',
 };
+export const GENDERS: Gender[] = ['female', 'male'];
+export const GENDER_NAMES: Record<Gender, string> = {
+  female: 'زن',
+  male: 'مرد',
+};
+export const COSTUMES = [
+  {
+    id: 'travel',
+    name: 'جامهٔ سفر',
+    description: 'جامهٔ سادهٔ سفر با شنل کوتاه؛ فقط ظاهر را تغییر می‌دهد.',
+  },
+  {
+    id: 'ceremonial',
+    name: 'ردای آیینی',
+    description: 'ردای سرخ و زرین آیین پهلوانی؛ فقط ظاهر را تغییر می‌دهد.',
+  },
+] as const;
+export type CostumeId = (typeof COSTUMES)[number]['id'];
+export const STARTER_COSTUME_IDS: CostumeId[] = ['travel', 'ceremonial'];
 export const ITEMS: Item[] = [
   {
     id: 'iron-blade',

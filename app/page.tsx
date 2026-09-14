@@ -1,5 +1,6 @@
 'use client';
 /* eslint-disable next/no-html-link-for-pages -- Sites sign-in requires a top-level anchor rather than client-side routing. */
+/* eslint-disable next/no-img-element -- Character portraits are static local PNGs composited in the client. */
 
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -27,7 +28,6 @@ import {
   RefreshCw,
   Clock3,
   BookOpen,
-  Pencil,
   X,
   Leaf,
 } from 'lucide-react';
@@ -40,6 +40,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { CharacterCreation } from '@/components/character/CharacterCreation';
+import { HeroScreen } from '@/components/character/HeroScreen';
 import {
   ENEMIES,
   REGIONS,
@@ -47,14 +49,13 @@ import {
   QUESTS,
   DUNGEON,
   STAT_NAMES,
-  SLOT_NAMES,
   MAX_ENERGY,
   ENERGY_MS,
   INVENTORY_CAP,
   fa,
   type Item,
-  type Stat,
   type Slot,
+  type Stat,
 } from '@/lib/game/content';
 import {
   derived,
@@ -62,6 +63,7 @@ import {
   newGame,
   questProgress,
   regenerate,
+  returningForAppearance,
   trainCost,
   xpGoal,
   type Action,
@@ -186,7 +188,7 @@ export default function Home() {
     [help, setHelp] = useState(false),
     [rename, setRename] = useState(false),
     [name, setName] = useState(''),
-    [filter, setFilter] = useState<'all' | Slot>('all');
+    [justCreated, setJustCreated] = useState(false);
   const busyRef = useRef(false),
     latestRevision = useRef(-1),
     clockOffset = useRef(0);
@@ -253,6 +255,7 @@ export default function Home() {
   const game = regenerate(saved ?? newGame(0), now),
     stats = derived(game),
     ready = !!saved && !loading && !busy,
+    playable = ready && game.characterCreated,
     cooldown = Math.max(0, Math.ceil((game.cooldownUntil - now) / 1000)),
     activeRegion = REGIONS[region],
     lockedRegion = game.level < activeRegion.level,
@@ -284,6 +287,10 @@ export default function Home() {
       setNotice(data.message ?? 'انجام شد.');
       if (data.battle) setReport(data.battle);
       if (action.type === 'rename') setRename(false);
+      if (action.type === 'createCharacter') {
+        setView('hero');
+        setJustCreated(true);
+      }
     } catch (e) {
       setError(
         e instanceof Error
@@ -306,9 +313,10 @@ export default function Home() {
             ? 'در انتظار انرژی'
             : 'آغاز نبرد';
   const fightDisabled = (cost = 1) =>
-    !ready || cooldown > 0 || game.hp < 20 || game.energy < cost;
+    !playable || cooldown > 0 || game.hp < 20 || game.energy < cost;
   const currentTitle = menus.find((m) => m.id === view)!.name;
   const questTeaser = QUESTS.find((q) => !game.claimed.includes(q.id));
+  const setupPending = !loading && !!saved && !game.characterCreated;
   return (
     <div className="game-shell">
       <a className="skip-link" href="#main">
@@ -330,10 +338,8 @@ export default function Home() {
               key={m.id}
               variant="ghost"
               className={'nav-item ' + (m.id === view ? 'active' : '')}
-              onClick={() => {
-                setView(m.id);
-                setFilter('all');
-              }}
+              disabled={!game.characterCreated}
+              onClick={() => setView(m.id)}
               aria-current={m.id === view ? 'page' : undefined}
             >
               <m.icon />
@@ -357,7 +363,8 @@ export default function Home() {
       <div className="game-body">
         <header className="topbar">
           <div className="breadcrumb">
-            جهان پارس <ChevronLeft /> <b>{currentTitle}</b>
+            جهان پارس <ChevronLeft />{' '}
+            <b>{setupPending ? 'ساخت پهلوان' : currentTitle}</b>
           </div>
           <div className="resources">
             <span title="سکه‌های شما">
@@ -370,6 +377,7 @@ export default function Home() {
             <Button
               className="profile-chip"
               variant="ghost"
+              disabled={!game.characterCreated}
               onClick={() => setView('hero')}
             >
               <Shield /> {game.name}
@@ -393,8 +401,12 @@ export default function Home() {
                   ? 'سفر تو از اینجا آغاز می‌شود'
                   : 'جهان پارس · فصل نخست'}
               </p>
-              <h1>{currentTitle}</h1>
-              <p>{subtitles[view]}</p>
+              <h1>{setupPending ? 'پهلوانت را بساز' : currentTitle}</h1>
+              <p>
+                {setupPending
+                  ? 'جنسیت را انتخاب کن؛ این انتخاب فقط ظاهر را می‌سازد.'
+                  : subtitles[view]}
+              </p>
             </div>
             <span className="season">
               <span className="status-dot" /> ماجراجویی تک‌نفره
@@ -448,6 +460,17 @@ export default function Home() {
               </Button>
             </output>
           )}
+          {setupPending ? (
+            <CharacterCreation
+              defaultName={game.name}
+              returning={returningForAppearance(game)}
+              busy={busy}
+              equipment={game.equipment}
+              onSubmit={(gender, name) =>
+                void act({ type: 'createCharacter', gender, name })
+              }
+            />
+          ) : (
           <div className="adventure-layout">
             <section className="primary-surface">
               {view === 'expedition' && (
@@ -594,161 +617,21 @@ export default function Home() {
                 </>
               )}
               {view === 'hero' && (
-                <>
-                  <div className="panel hero-summary">
-                    <div>
-                      <span className="eyebrow">شناسنامهٔ پهلوان</span>
-                      <h2>{game.name}</h2>
-                      <p>
-                        سطح {fa(game.level)} · {fa(game.wins)} پیروزی ·{' '}
-                        {fa(game.dungeonClears)} دژ پاک‌سازی‌شده
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      disabled={!ready}
-                      onClick={() => {
-                        setName(game.name);
-                        setRename(true);
-                      }}
-                    >
-                      <Pencil /> تغییر نام
-                    </Button>
-                  </div>
-                  <div className="section-heading">
-                    <h2>تجهیزات پوشیده‌شده</h2>
-                    <span>پیش از نبرد، آماده شو</span>
-                  </div>
-                  <div className="equipment-grid">
-                    {(Object.keys(SLOT_NAMES) as Slot[]).map((slot) => {
-                      const item = ITEMS.find(
-                        (i) => i.id === game.equipment[slot],
-                      );
-                      return (
-                        <div
-                          className={'equipment-slot ' + (item?.rarity ?? '')}
-                          key={slot}
-                        >
-                          <div className="item-symbol">
-                            <ItemIcon slot={slot} />
-                          </div>
-                          <small>{SLOT_NAMES[slot]}</small>
-                          <h3>{item?.name ?? 'جایگاه خالی'}</h3>
-                          {item ? (
-                            <>
-                              <ItemStats item={item} />
-                              <Button
-                                variant="ghost"
-                                disabled={!ready}
-                                onClick={() =>
-                                  void act({ type: 'unequip', slot })
-                                }
-                              >
-                                از تن خارج کن
-                              </Button>
-                            </>
-                          ) : (
-                            <p>از کوله‌پشتی یک نشان بپوش.</p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="section-heading">
-                    <h2>
-                      <Backpack /> کوله‌پشتی
-                    </h2>
-                    <span>
-                      {fa(game.inventory.length)} / {fa(INVENTORY_CAP)} وسیله
-                    </span>
-                  </div>
-                  <div className="filter-bar">
-                    {(['all', 'weapon', 'armor', 'charm'] as const).map((f) => (
-                      <Button
-                        variant={filter === f ? 'secondary' : 'ghost'}
-                        key={f}
-                        aria-pressed={filter === f}
-                        onClick={() => setFilter(f)}
-                      >
-                        {f === 'all' ? 'همه' : SLOT_NAMES[f]}
-                      </Button>
-                    ))}
-                  </div>
-                  <div className="item-grid">
-                    {ITEMS.filter(
-                      (item) =>
-                        game.inventory.includes(item.id) &&
-                        (filter === 'all' || item.slot === filter),
-                    ).map((item) => {
-                      const equipped = game.equipment[item.slot] === item.id,
-                        count = game.inventory.filter(
-                          (id) => id === item.id,
-                        ).length;
-                      return (
-                        <article
-                          className={'item-card ' + item.rarity}
-                          key={item.id}
-                        >
-                          <div className="item-card-top">
-                            <div className="item-symbol">
-                              <ItemIcon slot={item.slot} />
-                            </div>
-                            <span className="rarity">
-                              {rarityNames[item.rarity]}
-                              {count > 1 && ` · ${fa(count)} عدد`}
-                            </span>
-                          </div>
-                          <h3>{item.name}</h3>
-                          <ItemStats item={item} />
-                          <div className="item-actions">
-                            <Button
-                              variant={equipped ? 'secondary' : 'outline'}
-                              disabled={!ready || equipped}
-                              onClick={() =>
-                                void act({ type: 'equip', itemId: item.id })
-                              }
-                            >
-                              {equipped ? (
-                                <>
-                                  <Check /> پوشیده‌شده
-                                </>
-                              ) : (
-                                'پوشیدن'
-                              )}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              disabled={!ready || (equipped && count === 1)}
-                              onClick={() =>
-                                void act({ type: 'sell', itemId: item.id })
-                              }
-                            >
-                              فروش · {fa(Math.floor(item.price * 0.4))}
-                              <Coins />
-                            </Button>
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                  {!ITEMS.some(
-                    (i) =>
-                      game.inventory.includes(i.id) &&
-                      (filter === 'all' || i.slot === filter),
-                  ) && (
-                    <div className="empty-state">
-                      <Backpack />
-                      <h3>هنوز وسیله‌ای در این بخش نداری</h3>
-                      <p>در نبردها غنیمت جمع کن یا از بازار خرید کن.</p>
-                      <Button
-                        variant="outline"
-                        onClick={() => setView('market')}
-                      >
-                        رفتن به بازار
-                      </Button>
-                    </div>
-                  )}
-                </>
+                <HeroScreen
+                  game={game}
+                  ready={playable}
+                  justCreated={justCreated}
+                  onAct={(action) => void act(action)}
+                  onExpedition={() => {
+                    setJustCreated(false);
+                    setView('expedition');
+                  }}
+                  onMarket={() => setView('market')}
+                  onRename={() => {
+                    setName(game.name);
+                    setRename(true);
+                  }}
+                />
               )}
               {view === 'training' && (
                 <>
@@ -1116,7 +999,14 @@ export default function Home() {
             <aside className="player-column">
               <div className="panel player-panel">
                 <div className="player-emblem">
-                  <Shield />
+                  {game.appearance.gender ? (
+                    <img
+                      src={`/art/character/${game.appearance.gender}-portrait.png`}
+                      alt=""
+                    />
+                  ) : (
+                    <Shield />
+                  )}
                 </div>
                 <h2>{game.name}</h2>
                 <p>
@@ -1147,7 +1037,7 @@ export default function Home() {
                 <Button
                   className="heal-button"
                   variant="outline"
-                  disabled={!ready || game.hp >= stats.maxHp || game.food < 1}
+                  disabled={!playable || game.hp >= stats.maxHp || game.food < 1}
                   onClick={() => void act({ type: 'heal' })}
                 >
                   <Utensils /> خوردن خوراک <span>{fa(game.food)}</span>
@@ -1221,6 +1111,7 @@ export default function Home() {
               </p>
             </aside>
           </div>
+          )}
           <footer>
             مبارز <span>داستانی تازه در سرزمین افسانه‌های ایران</span>
             <span>
@@ -1330,28 +1221,35 @@ export default function Home() {
           </DialogDescription>
           <ol className="help-steps">
             <li>
-              <b>۱. لشکرکشی کن</b>
+              <b>۱. پهلوانت را بساز</b>
+              <p>
+                جنسیت را انتخاب کن و نام بگذار. زن و مرد توانایی یکسان دارند؛ این
+                انتخاب فقط ظاهر را می‌سازد.
+              </p>
+            </li>
+            <li>
+              <b>۲. لشکرکشی کن</b>
               <p>
                 از گرگ خاکستری شروع کن. پیروزی، حریف بعدی را باز می‌کند و سکه،
                 تجربه و گاهی غنیمت می‌دهد.
               </p>
             </li>
             <li>
-              <b>۲. قوی‌تر شو</b>
+              <b>۳. قوی‌تر شو</b>
               <p>
                 در تمرین‌گاه ویژگی‌ها را افزایش بده. تجهیزات بازار و غنیمت‌ها را در
-                بخش پهلوان بپوش.
+                بخش پهلوان بپوش؛ پوشاک فقط ظاهر را تغییر می‌دهد.
               </p>
             </li>
             <li>
-              <b>۳. توشه بردار</b>
+              <b>۴. توشه بردار</b>
               <p>
                 هر دقیقه یک انرژی و هر ۳۰ ثانیه شش سلامتی برمی‌گردد. خوراک سفر، تا
                 ۶۰ سلامتی بازیابی می‌کند.
               </p>
             </li>
             <li>
-              <b>۴. پاداش بگیر و دژ را فتح کن</b>
+              <b>۵. پاداش بگیر و دژ را فتح کن</b>
               <p>
                 پاداش مأموریت‌ها را دستی دریافت کن. سیاه‌چال سه‌مرحله‌ای و هیرکانی
                 در سطح ۳ و البرز در سطح ۵ باز می‌شوند.
