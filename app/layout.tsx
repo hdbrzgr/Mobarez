@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 export const metadata: Metadata = {
-  metadataBase: new URL('https://mobarez.honest-siren-5859.chatgpt.site'),
+  metadataBase: new URL('https://mobarez.hdbrzgr.chatgpt.site'),
   title: 'مبارز | افسانه‌ات را زندگی کن',
   description:
     'یک بازی نقش‌آفرینی فارسی در ایران اسطوره‌ای. لشکرکشی کن، غنیمت به دست بیاور و پهلوان شو.',
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://mobarez.honest-siren-5859.chatgpt.site/og.png',
+        url: 'https://mobarez.hdbrzgr.chatgpt.site/og.png',
         width: 1536,
         height: 1024,
         alt: 'مبارز، افسانه‌ات را زندگی کن',
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    images: ['https://mobarez.honest-siren-5859.chatgpt.site/og.png'],
+    images: ['https://mobarez.hdbrzgr.chatgpt.site/og.png'],
     title: 'مبارز',
     description: 'ماجراجویی در سرزمین افسانه‌های ایران',
   },
