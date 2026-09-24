@@ -5,6 +5,7 @@ import {
   baseOf,
   dailyMissions,
   derived,
+  partyOf,
   enemyUnlocked,
   expeditionEnemy,
   GameError,
@@ -645,4 +646,68 @@ void test('a month of play keeps content ahead of every play style', () => {
         `${profile.name} stalled in week ${d / 7}`,
       );
   }
+});
+
+void test('companions are hired once, limited by party slots, and help only in dungeons', () => {
+  let s = playableGame(start);
+  s.gold = 1_000_000;
+  assert.throws(
+    () =>
+      transition(s, { type: 'hireCompanion', companionId: 'bahman' }, start),
+    GameError,
+  );
+  s.level = 20;
+  s = transition(
+    s,
+    { type: 'hireCompanion', companionId: 'bahman' },
+    start,
+  ).state;
+  assert.deepEqual(s.party, ['bahman']);
+  assert.throws(
+    () =>
+      transition(s, { type: 'hireCompanion', companionId: 'bahman' }, start),
+    GameError,
+  );
+  s = transition(s, { type: 'hireCompanion', companionId: 'sam' }, start).state;
+  s = transition(
+    s,
+    { type: 'hireCompanion', companionId: 'paridokht' },
+    start,
+  ).state;
+  assert.equal(s.party.length, 2, 'level 20 has two slots');
+  assert.throws(
+    () =>
+      transition(
+        s,
+        { type: 'setParty', companionIds: ['bahman', 'sam', 'paridokht'] },
+        start,
+      ),
+    GameError,
+  );
+  assert.throws(
+    () => transition(s, { type: 'setParty', companionIds: ['farud'] }, start),
+    GameError,
+  );
+  s = transition(
+    s,
+    { type: 'setParty', companionIds: ['sam', 'paridokht'] },
+    start,
+  ).state;
+  const party = partyOf(s);
+  assert.ok(party.ally > 0 && party.heal > 0 && party.guard === 0);
+  s.hp = derived(s).maxHp;
+  const d = transition(
+    s,
+    { type: 'dungeon', dungeonId: 'dragon-lair' },
+    start,
+    stable,
+  );
+  assert.ok(d.battle!.rounds.some((r) => r.ally));
+  const e = transition(
+    s,
+    { type: 'fight', enemyId: 'mountain-wolf' },
+    start,
+    stable,
+  );
+  assert.ok(!e.battle!.rounds.some((r) => r.ally));
 });

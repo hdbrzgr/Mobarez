@@ -49,7 +49,8 @@ export type View =
   | 'arena'
   | 'quests'
   | 'titles'
-  | 'reports';
+  | 'reports'
+  | 'board';
 
 export type ViewProps = {
   game: GameState;

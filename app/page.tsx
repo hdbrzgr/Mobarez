@@ -40,6 +40,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { CharacterCreation } from '@/components/character/CharacterCreation';
+import { BoardView } from '@/components/game/BoardView';
 import { OverviewView } from '@/components/game/OverviewView';
 import {
   ForgeView,
@@ -126,6 +127,7 @@ const GROUPS: { name: string; items: Menu[] }[] = [
     items: [
       { id: 'quests', name: 'مأموریت‌ها', icon: ScrollText },
       { id: 'titles', name: 'لقب و کارنامه', icon: Crown },
+      { id: 'board', name: 'رده‌بندی', icon: Trophy },
       { id: 'reports', name: 'گزارش نبردها', icon: BookOpen },
     ],
   },
@@ -145,6 +147,7 @@ const subtitles: Record<View, string> = {
   quests: 'راه پهلوانی از دشت پارس تا کوه قاف.',
   titles: 'نام و لقب، یادگار کارهای بزرگ.',
   reports: 'روایت پیروزی‌ها و درس‌های نبردهای تو.',
+  board: 'نام‌آوران این جهان.',
 };
 const groupOf = (v: View) =>
   GROUPS.find((g) => g.items.some((m) => m.id === v))!.name;
@@ -489,6 +492,7 @@ export default function Home() {
                 {view === 'arena' && <ArenaView {...props} busy={busy} />}
                 {view === 'quests' && <QuestsView {...props} />}
                 {view === 'titles' && <TitlesView {...props} />}
+                {view === 'board' && <BoardView {...props} />}
                 {view === 'reports' && (
                   <ReportsView {...props} onOpen={setReport} />
                 )}

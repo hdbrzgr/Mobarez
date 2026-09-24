@@ -3427,3 +3427,51 @@ button.equipment-slot {
     height: 34px;
   }
 }
+.companion-card button {
+  width: 100%;
+  font-size: 11px;
+}
+.companion-card.active {
+  border-color: #cfb77d;
+}
+.companion-card.locked {
+  opacity: 0.55;
+}
+.ally-line {
+  font-size: 10px !important;
+  color: #a9c787 !important;
+}
+.board {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.board li {
+  display: grid;
+  grid-template-columns: 40px 1fr auto 90px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  font-size: 12px;
+}
+.board li.you {
+  border-color: #cfb77d;
+}
+.board li small {
+  color: #98a18a;
+  font-size: 10px;
+}
+.board li > span:last-child {
+  color: #e2c68b;
+  text-align: left;
+}
+.board-rank {
+  color: #cfb77d;
+  font-weight: 700;
+}

@@ -4,6 +4,8 @@ import {
   BASE_BY_ID,
   BLESSING_MS,
   BLESSINGS,
+  COMPANIONS,
+  partySlots,
   COSTUMES,
   DAILY_COUNT,
   DAILY_TEMPLATES,
@@ -86,6 +88,9 @@ export type BattleRound = {
   dodged: boolean;
   blocked: boolean;
   enemyCritical: boolean;
+  /** Companion damage and healing (dungeons only). */
+  ally?: number;
+  healed?: number;
   playerHp: number;
   enemyHp: number;
 };
@@ -182,6 +187,8 @@ export type GameState = {
   arena: { round: number };
   market: { period: number; level: number; nonce: number; bought: number[] };
   activeTitleId: string | null;
+  companions: string[];
+  party: string[];
   history: Battle[];
   lastActionId: string | null;
 };
@@ -211,6 +218,8 @@ export type Action =
   | { type: 'claim'; questId: string }
   | { type: 'claimDaily'; index: number }
   | { type: 'setTitle'; titleId: string | null }
+  | { type: 'hireCompanion'; companionId: string }
+  | { type: 'setParty'; companionIds: string[] }
   | { type: 'rename'; name: string }
   | { type: 'createCharacter'; gender: Gender; name: string }
   | { type: 'setGender'; gender: Gender }
@@ -253,7 +262,7 @@ export const enemyXp = (level: number) =>
 export const enemyGold = (level: number) =>
   Math.round(6 + 3.2 * level + 0.1 * level * level);
 export function xpGoal(level: number) {
-  return Math.round(enemyXp(level) * (2 + 2.2 * level + 0.05 * level * level));
+  return Math.round(enemyXp(level) * (2 + 2.2 * level + 0.065 * level * level));
 }
 export function trainCost(s: GameState, stat: Stat) {
   return Math.round(8 + 0.4 * Math.pow(s.stats[stat], 1.85));
@@ -666,6 +675,7 @@ export function derived(s: GameState, now = 0) {
     regen:
       maxHp *
       (0.012 + 0.018 * intFactor) *
+      (1 + Math.max(0, 10 - s.level) * 0.2) *
       (blessed(s, 'anahita', now) ? 2 : 1),
     foodBonus:
       1 + totals.intelligence / (totals.intelligence + 50 + 5 * s.level),
@@ -784,12 +794,37 @@ export const expeditionEnemy = (e: Enemy) =>
 export const rivalCombatant = (r: Rival) =>
   enemyCombatant(r.name, r.level, 'rival');
 
+/* ================= Companions ================= */
+
+export type Party = {
+  ally: number;
+  guard: number;
+  heal: number;
+  maxHp: number;
+};
+export function partyOf(s: GameState, now = 0): Party {
+  const d = derived(s, now);
+  const lead = 1 + d.totals.charisma / (d.totals.charisma + 100 + 5 * s.level);
+  const party: Party = { ally: 0, guard: 0, heal: 0, maxHp: d.maxHp };
+  for (const id of s.party.slice(0, partySlots(s.level))) {
+    const c = COMPANIONS.find((x) => x.id === id);
+    if (!c) continue;
+    if (c.role === 'striker')
+      party.ally += ((d.min + d.max) / 2) * c.power * lead;
+    else if (c.role === 'guard') party.guard += c.power * lead;
+    else party.heal += d.maxHp * c.power * lead;
+  }
+  party.guard = Math.min(0.45, party.guard);
+  return party;
+}
+
 /* ================= Combat ================= */
 
 export function simulate(
   hero: Combatant,
   foe: Combatant,
   random: () => number,
+  party?: Party,
 ) {
   let hp = hero.hp,
     foeHp = foe.hp;
@@ -839,6 +874,15 @@ export function simulate(
       critical ||= second.crit;
       foeHp = Math.max(0, foeHp - second.dmg);
     }
+    let ally = 0;
+    if (party?.ally && foeHp > 0) {
+      ally = Math.max(
+        1,
+        Math.round(party.ally * (0.85 + random() * 0.3) * (1 - foeRed * 0.5)),
+      );
+      dealt += ally;
+      foeHp = Math.max(0, foeHp - ally);
+    }
     let taken = 0,
       dodged = false,
       blocked = false,
@@ -847,6 +891,11 @@ export function simulate(
       const hits = random() < foeDouble ? 2 : 1;
       for (let i = 0; i < hits && hp > 0; i++) {
         const blow = strike(foe, foeCrit, heroRed, heroDodge, heroBlock);
+        if (party?.guard)
+          blow.dmg = Math.max(
+            blow.missed ? 0 : 1,
+            Math.round(blow.dmg * (1 - party.guard)),
+          );
         taken += blow.dmg;
         dodged ||= blow.missed;
         blocked ||= blow.blocked;
@@ -854,7 +903,14 @@ export function simulate(
         hp = Math.max(0, hp - blow.dmg);
       }
     }
+    let healed = 0;
+    if (party?.heal && hp > 0 && foeHp > 0) {
+      healed = Math.min(party.maxHp - hp, Math.round(party.heal));
+      hp += Math.max(0, healed);
+    }
     rounds.push({
+      ...(ally ? { ally } : {}),
+      ...(healed > 0 ? { healed } : {}),
       round: r,
       dealt,
       taken,
@@ -965,6 +1021,8 @@ export function newGame(now = Date.now(), seed?: number): GameState {
     arena: { round: 0 },
     market: { period: marketPeriod(now), level: 1, nonce: 0, bought: [] },
     activeTitleId: null,
+    companions: [],
+    party: [],
     history: [],
     lastActionId: null,
   };
@@ -1115,6 +1173,8 @@ export function normalizeSave(input: GameState, now = Date.now()): GameState {
   s.characterCreated = raw.characterCreated === true && gender !== null;
   s.counters = { ...emptyCounters(), ...s.counters };
   s.daily.progress = { ...emptyDailyProgress(), ...s.daily.progress };
+  s.companions ??= [];
+  s.party ??= [];
   s.food = Object.assign({ bread: 0, kebab: 0, sharbat: 0 }, s.food);
   return s;
 }
@@ -1701,6 +1761,33 @@ export function transition(
         : 'لقب رتبه به کار رفت.';
       break;
     }
+    case 'hireCompanion': {
+      const c = COMPANIONS.find((x) => x.id === action.companionId);
+      if (!c) throw new GameError('همراه پیدا نشد.');
+      if (s.companions.includes(c.id))
+        throw new GameError('این همراه را پیش‌تر به خدمت گرفته‌ای.');
+      if (s.level < c.level)
+        throw new GameError(`این همراه از سطح ${fa(c.level)} به تو می‌پیوندد.`);
+      requireGold(s, c.price);
+      s.companions.push(c.id);
+      if (s.party.length < partySlots(s.level)) s.party.push(c.id);
+      message = `${c.name} به یاران تو پیوست.`;
+      break;
+    }
+    case 'setParty': {
+      const ids = Array.isArray(action.companionIds)
+        ? [...new Set(action.companionIds)]
+        : null;
+      if (!ids || ids.some((id) => !s.companions.includes(id)))
+        throw new GameError('همراه نامعتبر است.');
+      if (ids.length > partySlots(s.level))
+        throw new GameError(
+          `در سطح ${fa(s.level)} بیش از ${fa(partySlots(s.level))} همراه نمی‌توانی داشت.`,
+        );
+      s.party = ids;
+      message = 'دستهٔ همراهان به‌روز شد.';
+      break;
+    }
     case 'rename':
       s.name = parseName(action.name);
       message = 'نام پهلوان ثبت شد.';
@@ -1817,7 +1904,12 @@ function battle(
 
   const hero = playerCombatant(s, now);
   const maxHp = derived(s, now).maxHp;
-  const result = simulate(hero, foe, random);
+  const result = simulate(
+    hero,
+    foe,
+    random,
+    kind === 'dungeon' ? partyOf(s, now) : undefined,
+  );
   s.hp = Math.max(1, result.hp);
   s.healAt = now;
   const won = result.won;
@@ -1870,7 +1962,7 @@ function battle(
       );
       xp = Math.round(
         enemyXp(foe.level) *
-          (boss ? 2 : 1.4) *
+          (boss ? 2 : 1.2) *
           xpScale(s.level, foe.level) *
           xpMult,
       );

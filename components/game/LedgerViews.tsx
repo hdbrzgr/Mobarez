@@ -376,6 +376,12 @@ export function BattleSummary({ report }: { report: Battle }) {
                     ? 'از ضربهٔ حریف جاخالی دادی.'
                     : `${r.enemyCritical ? 'ضربهٔ بحرانی حریف! ' : ''}${r.blocked ? 'با سد، ' : ''}${fa(r.taken)} آسیب دریافت کردی.`}
               </p>
+              {(r.ally || r.healed) && (
+                <p className="ally-line">
+                  {r.ally ? `همراهان ${fa(r.ally)} آسیب زدند. ` : ''}
+                  {r.healed ? `${fa(r.healed)} سلامتی درمان شد.` : ''}
+                </p>
+              )}
               <small>
                 تو {fa(r.playerHp)} · حریف {fa(r.enemyHp)}
               </small>

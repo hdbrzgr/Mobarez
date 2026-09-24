@@ -47,8 +47,31 @@ async function player(request: Request) {
     revision: saved.revision,
   };
 }
+async function board(request: Request) {
+  const p = await player(request);
+  const sort = new URL(request.url).searchParams.get('board') === 'fame' ? 'fame' : 'honour';
+  const rows = await p.db
+    .prepare(
+      `SELECT user_id AS id, json_extract(state, '$.name') AS name, json_extract(state, '$.level') AS level,
+        json_extract(state, '$.honour') AS honour, json_extract(state, '$.fame') AS fame
+       FROM players WHERE json_extract(state, '$.characterCreated') = 1
+       ORDER BY ${sort} DESC, level DESC LIMIT 25`,
+    )
+    .all<{ id: string; name: string; level: number; honour: number; fame: number }>();
+  return reply({
+    board: (rows.results ?? []).map((r, i) => ({
+      rank: i + 1,
+      name: String(r.name ?? ''),
+      level: Number(r.level) || 1,
+      honour: Number(r.honour) || 0,
+      fame: Number(r.fame) || 0,
+      you: r.id === p.userId,
+    })),
+  });
+}
 export async function GET(request: Request) {
   try {
+    if (new URL(request.url).searchParams.has('board')) return await board(request);
     const p = await player(request);
     const now = Date.now();
     return reply({

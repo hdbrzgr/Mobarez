@@ -32,11 +32,15 @@ import {
   upgradeCost,
   type Action,
   type Combatant,
+  type Party,
+  partyOf,
   type GameState,
   type ItemInstance,
 } from '../lib/game/engine';
 import {
   BAG_UPGRADES,
+  COMPANIONS,
+  partySlots,
   DUNGEONS,
   ENEMIES,
   JOBS,
@@ -72,14 +76,19 @@ function act(s: GameState, a: Action) {
   }
 }
 
-function winRate(s: GameState, foe: Combatant, n = 24) {
+function winRate(s: GameState, foe: Combatant, n = 24, party?: Party) {
   const hero = playerCombatant(s, now);
   hero.hp = derived(s, now).maxHp;
   const r = seeded(foe.level * 97 + s.level);
   let w = 0;
   let hpLoss = 0;
   for (let i = 0; i < n; i++) {
-    const res = simulate(hero, foe, r);
+    const res = simulate(
+      hero,
+      foe,
+      r,
+      party ? { ...party, maxHp: hero.hp } : undefined,
+    );
     if (res.won) w++;
     hpLoss += 1 - res.hp / hero.hp;
   }
@@ -146,7 +155,28 @@ function shop(s: GameState): GameState {
   return s;
 }
 
+function hire(s: GameState): GameState {
+  for (const c of COMPANIONS) {
+    if (
+      !s.companions.includes(c.id) &&
+      s.level >= c.level &&
+      s.gold > c.price * 2
+    ) {
+      const r = act(s, { type: 'hireCompanion', companionId: c.id });
+      if (r) s = r.state;
+    }
+  }
+  const slots = partySlots(s.level);
+  const want = [...s.companions].reverse().slice(0, slots);
+  if (want.join() !== s.party.join()) {
+    const r = act(s, { type: 'setParty', companionIds: want });
+    if (r) s = r.state;
+  }
+  return s;
+}
+
 function spend(s: GameState): GameState {
+  s = hire(s);
   // Keep a food reserve, then alternate upgrades and training.
   const need = 6 - s.food.kebab;
   if (need > 0 && s.gold > foodPrice(s, 'kebab') * need * 3) {
@@ -262,7 +292,10 @@ function session(s: GameState, profile: Profile, last: boolean, st: Stats) {
       if (!dungeonUnlocked(s, x.id)) return false;
       const p = dungeonProgress(s, x.id);
       const hard = p.stage === 0 ? p.clears > 2 : p.hard;
-      return winRate(s, dungeonEnemy(x.id, p.stage, hard)).rate >= 0.75;
+      return (
+        winRate(s, dungeonEnemy(x.id, p.stage, hard), 24, partyOf(s, now))
+          .rate >= 0.75
+      );
     });
     if (!d) break;
     const p = dungeonProgress(s, d.id);

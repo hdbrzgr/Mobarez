@@ -896,13 +896,13 @@ export const DUNGEONS: Dungeon[] = [
     id: 'qaf-hall',
     name: 'تالار دیوشاه',
     region: 8,
-    level: 70,
+    level: 74,
     description: 'بلندترین تالار جهان، جایی که دیوشاه گنج‌های کیانی را انباشته.',
     stages: [
-      stage('qh-griffins', 'شیردالان پاسدار', 'ایوان باد', 70, 'beast', 0),
-      stage('qh-giant', 'غول دروازه', 'دروازهٔ سنگی', 72, 'brute', 2),
-      stage('qh-sorcerer', 'جادوگر قاف', 'برج طلسم', 74, 'mystic', 1),
-      stage('qh-king', 'دیوشاه بیدار', 'تخت قاف', 77, 'boss', 2, true),
+      stage('qh-griffins', 'شیردالان پاسدار', 'ایوان باد', 74, 'beast', 0),
+      stage('qh-giant', 'غول دروازه', 'دروازهٔ سنگی', 76, 'brute', 2),
+      stage('qh-sorcerer', 'جادوگر قاف', 'برج طلسم', 78, 'mystic', 1),
+      stage('qh-king', 'دیوشاه بیدار', 'تخت قاف', 80, 'boss', 2, true),
     ],
   },
 ];
@@ -986,6 +986,76 @@ export const BAG_UPGRADES = [
   { size: 80, level: 20, price: 9000 },
   { size: 100, level: 35, price: 40000 },
 ];
+
+/* ---------- Dungeon companions ---------- */
+
+export type CompanionRole = 'guard' | 'healer' | 'striker';
+export const COMPANIONS: {
+  id: string;
+  name: string;
+  role: CompanionRole;
+  level: number;
+  price: number;
+  power: number;
+  description: string;
+}[] = [
+  {
+    id: 'bahman',
+    name: 'بهمن سپردار',
+    role: 'guard',
+    level: 8,
+    price: 1500,
+    power: 0.1,
+    description: 'سپر را پیش روی تو می‌گیرد؛ آسیب دریافتی کمتر می‌شود.',
+  },
+  {
+    id: 'paridokht',
+    name: 'پریدخت درمانگر',
+    role: 'healer',
+    level: 14,
+    price: 5000,
+    power: 0.02,
+    description: 'در هر دور بخشی از سلامتی‌ات را بازمی‌گرداند.',
+  },
+  {
+    id: 'sam',
+    name: 'سام کماندار',
+    role: 'striker',
+    level: 20,
+    price: 12000,
+    power: 0.16,
+    description: 'از دور تیر می‌اندازد و در هر دور آسیب می‌زند.',
+  },
+  {
+    id: 'farud',
+    name: 'فرود نیزه‌دار',
+    role: 'striker',
+    level: 30,
+    price: 30000,
+    power: 0.22,
+    description: 'در کنار تو می‌جنگد و نیزه‌اش سنگین است.',
+  },
+  {
+    id: 'gordiyeh',
+    name: 'گردیه سوار',
+    role: 'guard',
+    level: 42,
+    price: 70000,
+    power: 0.14,
+    description: 'سوار زره‌پوشی که بار نبرد را با تو قسمت می‌کند.',
+  },
+  {
+    id: 'rudabeh',
+    name: 'رودابه فرزانه',
+    role: 'healer',
+    level: 50,
+    price: 120000,
+    power: 0.03,
+    description: 'دانش گیاهان کابل را با خود دارد.',
+  },
+];
+export const partySlots = (level: number) =>
+  level >= 35 ? 3 : level >= 20 ? 2 : level >= 8 ? 1 : 0;
 
 /* ---------- Titles ---------- */
 

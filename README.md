@@ -4,80 +4,82 @@
 
 Mobarez is a Persian, right-to-left browser RPG set in a fictional, myth-inspired Iran. Players fight NPCs, collect equipment, train their character, complete quests, and explore a staged dungeon. The design draws on Gladiatus's PvE loop, with original game rules, writing, and artwork.
 
-**Stage:** playable private MVP, version `0.1.0`. Public release readiness and browser QA are still pending.
+**Stage:** playable private build, version `0.2.0` — a Gladiatus-style town/country RPG paced for at least a month of play. Public release readiness is still pending.
 
 **Hosted game:** [mobarez.hdbrzgr.chatgpt.site](https://mobarez.hdbrzgr.chatgpt.site) — access was last confirmed as owner-only on 14 September 2026.
 
 ## Documentation
 
-| Document                     | Purpose                                                                                            |
-| ---------------------------- | -------------------------------------------------------------------------------------------------- |
-| [README.md](README.md)       | Product overview, setup, architecture, and operating instructions                                  |
-| [PROGRESS.md](PROGRESS.md)   | Implemented features, verification evidence, and known issues                                      |
-| [PLAN.md](PLAN.md)           | Priorities, milestones, dependencies, and acceptance criteria                                      |
-| [Character UX](docs/UX.md)   | Gender-first onboarding, visible equipment, costumes, concept art and implementation specification |
-| [Research](docs/research.md) | Gladiatus research, source links, adaptation decisions, and balance hypotheses                     |
-| [Gladiatus adaptation](docs/gladiatus-adaptation.md) | Full Gladiatus-system inventory, Iranian names, and G1–G5 expansion waves |
-| [Artwork](docs/artwork.md)   | Original generated assets, prompts, and font provenance                                            |
+| Document                                             | Purpose                                                                                            |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| [README.md](README.md)                               | Product overview, setup, architecture, and operating instructions                                  |
+| [PROGRESS.md](PROGRESS.md)                           | Implemented features, verification evidence, and known issues                                      |
+| [PLAN.md](PLAN.md)                                   | Priorities, milestones, dependencies, and acceptance criteria                                      |
+| [Character UX](docs/UX.md)                           | Gender-first onboarding, visible equipment, costumes, concept art and implementation specification |
+| [Research](docs/research.md)                         | Gladiatus research, source links, adaptation decisions, and balance hypotheses                     |
+| [Gladiatus adaptation](docs/gladiatus-adaptation.md) | Full Gladiatus-system inventory, Iranian names, and G1–G5 expansion waves                          |
+| [Artwork](docs/artwork.md)                           | Original generated assets, prompts, and font provenance                                            |
 
 ## Next milestones
 
-Gender selection, visible equipment and two cosmetic outfits are implemented in source; private release and the full browser acceptance matrix remain to be recorded ([docs/UX.md](docs/UX.md)).
-
-After U0.4, P0 reward fixes, and P1 saves, the next product slice is a Gladiatus-like game shell (city/country, more slots, bags, packages, work). The full system inventory and later waves are in [docs/gladiatus-adaptation.md](docs/gladiatus-adaptation.md).
+Version 0.2 implements most of the G1–G4 waves from [docs/gladiatus-adaptation.md](docs/gladiatus-adaptation.md): town/country shell, eight slots, bag and packages, procedural affix loot, forge, work, split points, arena, daily missions, titles, companions, and a highscore board. Remaining: wearable art for the five new slots, hosted release of save version 2, and a browser/accessibility acceptance pass ([PROGRESS.md](PROGRESS.md)).
 
 ## The game
 
-The core loop is **choose a fight → review the result → equip loot → train → claim quest rewards → unlock harder content**.
+The loop is Gladiatus-shaped: **spend expedition and dungeon points → collect packages → equip, sell or smelt → train and forge → claim daily and story rewards → push into the next province.** Everything is original Iranian fiction and original numbers.
 
-| Screen         | Persian label | Current functionality                                            |
-| -------------- | ------------- | ---------------------------------------------------------------- |
-| Expeditions    | لشکرکشی       | Three regions, nine enemies, sequential opponent unlocks         |
-| Character      | پهلوان        | Rename character, inspect stats, equip or sell inventory items   |
-| Dungeon        | سیاه‌چال      | Three persistent stages, solo combat, final relic reward, replay |
-| Quests         | مأموریت‌ها    | Five automatically active milestones with manual reward claims   |
-| Training       | تمرین‌گاه     | Spend gold on strength, agility, vitality, and luck              |
-| Market         | بازار         | Buy eight equipment items and healing food at fixed prices       |
-| Battle reports | گزارش نبردها  | Review the last 20 fights and their individual rounds            |
+### Town (شهر)
 
-### First play session
+| Screen   | Persian | What it does                                                                                                                                                       |
+| -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Overview | پهلوان  | Full-body hero, eight slots (weapon, shield, helmet, armour, gloves, boots, ring, amulet), combat sheet, bag grid with compare/equip/sell/smelt, cosmetic wardrobe |
+| Packages | بسته‌ها | Loot inbox; take one/all, sell or smelt, bulk-sell/smelt by quality; 7-day expiry into coins                                                                       |
+| Market   | بازار   | 12 level-matched items that rotate every 6 hours (paid refresh), three foods, bag upgrades to 100 slots                                                            |
+| Forge    | آهنگری  | Upgrade +1…+10 (6 % per step), refine quality one colour, smelt items into gem dust                                                                                |
+| Training | زورخانه | Six stats: strength, agility, vitality, luck, charisma (فرّه), intelligence (خرد); level-based cap                                                                 |
+| Temple   | معبد    | Four seeded daily missions (Iran-time days) and four two-hour blessings                                                                                            |
+| Work     | کار     | Four jobs for 1/2/4/8 hours; pays at the end, blocks fighting, cancel forfeits pay                                                                                 |
 
-1. Open the game and sign in when prompted.
-2. Choose **زن** or **مرد**, keep or enter a name, then start.
-3. Open **پهلوان** to see the full-body character wearing starter equipment.
-4. Choose **لشکرکشی**, then fight **گرگ خاکستری** in **دشت‌های پارس**.
-5. Read the result and return to **پهلوان** to preview and equip any useful loot, or try a costume under **پوشاک**.
-6. Claim **نخستین گام** under **مأموریت‌ها**.
-7. Spend gold in **تمرین‌گاه** or **بازار**. Buying equipment does not automatically equip it.
-8. Recover health using **خوردن خوراک**, or wait for passive regeneration.
-9. Reach level 3 to unlock Hyrcania and the dungeon; reach level 5 to unlock Alborz.
+### Country (کشور)
+
+| Screen      | Persian  | What it does                                                                                                              |
+| ----------- | -------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Expeditions | لشکرکشی  | Nine provinces from Pars to Mount Qaf, 36 opponents (each province ends with a boss), levels 1–73                         |
+| Dungeons    | سیاه‌چال | Nine staged dungeons (levels 3–80), normal and hard mode, guaranteed lapis+ boss loot, fame, up to three hired companions |
+| Arena       | میدان    | Five rotating NPC rivals near your level (clearly labelled as not players); honour and coins                              |
+
+### Ledger (دفتر)
+
+41 story quests from the first wolf to the Qaf throne, seven honour ranks and thirteen earned titles with percentage bonuses (only the active one applies), a statistics record, a real-player highscore board (honour or fame), and the last 25 battle reports with round-by-round logs.
 
 ### Current rules
 
-These are accelerated MVP settings, not reproductions of Gladiatus's formulas. [Content](lib/game/content.ts) and the [engine](lib/game/engine.ts) are authoritative.
+[Content](lib/game/content.ts) and the [engine](lib/game/engine.ts) are authoritative.
 
-| Rule                            | Value                                                                                          |
-| ------------------------------- | ---------------------------------------------------------------------------------------------- |
-| New character                   | Level 1, 350 gold, 120 health, 12 energy, three food portions                                  |
-| Starter equipment               | Iron blade and leather armor, already equipped                                                 |
-| Expedition / dungeon stage cost | 1 / 2 energy                                                                                   |
-| Energy recovery                 | 1 per minute, up to 12                                                                         |
-| Health recovery                 | 6 per 30 seconds, up to the current maximum                                                    |
-| Food                            | Costs 20 gold; restores up to 60 health; maximum stock 99                                      |
-| Shared combat cooldown          | 8 seconds                                                                                      |
-| Minimum health to begin combat  | 20                                                                                             |
-| Combat resolution               | Automatic, player attacks first, maximum 20 rounds                                             |
-| Defeat                          | No victory gold or loot; 5 XP; health kept at least 1 after combat, before any level-up refill |
-| XP needed for the next level    | `80 + (level - 1) × 45`                                                                        |
-| Level-up                        | +1 strength, +1 vitality, and full health                                                      |
-| Equipment                       | Weapon, armor, and charm; common, rare, and epic rarities                                      |
-| Inventory capacity              | 40 equipment copies; food tracked separately                                                   |
-| Sale / overflow conversion      | `floor(shop price × 0.4)` gold                                                                 |
-| Dungeon completion              | Simorgh relic reward; stage resets for another run                                             |
+| Rule              | Value                                                                                                                                                                      |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Expedition points | 24 max, +1 every 6 minutes; 1 per fight; 20 s cooldown                                                                                                                     |
+| Dungeon points    | 12 max, +1 every 12 minutes; 1 per stage; 20 s cooldown                                                                                                                    |
+| Arena             | One fight every 10 minutes from level 2                                                                                                                                    |
+| Health            | Regenerates 1.2–3 % of max per minute (intelligence, early-level bonus, Anahita blessing); food heals 25/50/100 %                                                          |
+| Fight requirement | At least 10 % health, not working                                                                                                                                          |
+| Combat            | Up to 25 rounds; hit/dodge (agility), crit ×1.7 (luck), block halves damage (strength + shield), double hit (charisma); after round 25 the side with more health left wins |
+| Loot              | First kill always drops; then 30 % (bosses 60 %); quality ساده → فیروزه → لاجورد → ارغوان → کهربا; any affix means at least فیروزه                                         |
+| Experience        | Reduced against opponents more than two levels below you; level cap 80                                                                                                     |
+| Level-up          | +1 strength, +1 vitality, full health                                                                                                                                      |
+| Selling           | 25 % of item value; market buys at 110 %                                                                                                                                   |
 
-Defeating the preceding enemy unlocks the next opponent within a region. Region entry uses the region's level requirement; an individual enemy's displayed level is a difficulty indicator, not an additional character-level gate. Dungeon progress survives defeat and leaving the screen.
+### Pacing evidence
 
-Overflow rewards and their report totals have known edge cases; see [PROGRESS.md](PROGRESS.md#known-issues-and-limitations).
+`npm run simulate` plays the real engine with a bot for 30 in-game days under three schedules. With the current tables:
+
+| Schedule | Sessions/day | Day-30 level | Provinces reached                             |
+| -------- | ------------ | ------------ | --------------------------------------------- |
+| casual   | 2            | ≈ 38         | 6 of 9                                        |
+| engaged  | 5            | ≈ 60         | 8 of 9                                        |
+| hardcore | 12           | ≈ 70         | 9 of 9, last boss and Qaf dungeon still ahead |
+
+The test suite asserts that no schedule finishes the final boss or dungeon within 30 days and that every schedule still gains levels every week.
 
 ## Local development
 
@@ -124,7 +126,8 @@ Local saves live under `.wrangler/state`. Preserve that directory to keep local 
 | `npm run typecheck`          | TypeScript verification                                                   |
 | `npm run lint`               | Oxlint, including configured type-aware and accessibility rules           |
 | `npm run format`             | Format supported project files; this modifies files                       |
-| `npm test`                   | Bundle and run 13 game-engine tests through Node's test runner            |
+| `npm test`                   | Bundle and run the game-engine tests (including the 30-day pacing test)   |
+| `npm run simulate [profile]` | Print the 30-day pacing tables for casual / engaged / hardcore schedules  |
 | `npm run db:generate`        | Generate SQL migrations from the Drizzle schema                           |
 | `npm run db:local`           | Apply the initial migration to a fresh local database                     |
 | `node scripts/api-smoke.mjs` | Run mutating local API smoke checks against a running dev server          |
@@ -183,22 +186,25 @@ flowchart TD
 
 ```text
 app/
-  page.tsx              Game screens, actions, notifications, and dialogs
+  page.tsx              Town/country shell, resource bar, player column, dialogs
   globals.css           Theme, RTL layout, responsive rules, and motion
   layout.tsx            Persian document and social-preview metadata
   api/game/route.ts     Authenticated state loading and action endpoint
 lib/game/
-  content.ts            Enemy, region, dungeon, item, quest, and costume definitions
-  engine.ts             State model, combat, economy, regeneration, appearance, and unlocks
+  content.ts            Provinces, enemies, dungeons, item bases, affixes, jobs, foods,
+                        blessings, companions, titles, story and daily quest tables
+  engine.ts             Save v2 + v1 migration, items, combat, points, market, arena,
+                        missions, forge, work, titles, companions, regeneration
   character-art.ts      Typed character, weapon, charm and costume asset mappings
-components/character/   Gender setup, full-body stage, equipment and wardrobe
+components/character/   Gender setup and full-body stage
+components/game/        One file per screen group (overview, town, country, ledger, board)
 components/ui/          Shared button, input, dialog, and progress primitives
 db/
   schema.ts             Drizzle definition of the players table
   index.ts              D1 binding access
   env.d.ts              Cloudflare binding types
 drizzle/                Generated SQL and migration snapshots
-scripts/                Engine test runner and local API smoke checks
+scripts/                Engine test runner, 30-day pacing simulator, API smoke checks
 tests/                  Engine regression tests and seeded simulations
 public/                 Game artwork, fonts, favicon, and social card
 docs/                   Research and artwork provenance
@@ -209,20 +215,22 @@ docs/                   Research and artwork provenance
 
 One `players` row stores each platform user's game state:
 
-| Column       | Role                                                                     |
-| ------------ | ------------------------------------------------------------------------ |
-| `user_id`    | Primary key, taken from trusted request identity                         |
+| Column       | Role                                                                                 |
+| ------------ | ------------------------------------------------------------------------------------ |
+| `user_id`    | Primary key, taken from trusted request identity                                     |
 | `state`      | JSON containing character, appearance, inventory, quests, timers, and recent reports |
-| `revision`   | Optimistic concurrency counter                                           |
-| `updated_at` | Timestamp of the last committed mutation                                 |
+| `revision`   | Optimistic concurrency counter                                                       |
+| `updated_at` | Timestamp of the last committed mutation                                             |
 
 The server owns combat rolls, rewards, costs, inventory rules, and time gates. Browser state is a display of the server result, not the authoritative save.
 
-A GET calculates elapsed regeneration without rewriting an existing row. An action recalculates regeneration and commits the resulting state. Offline recovery therefore requires no background job. The UI estimates timers from server time and polls approximately every 20 seconds while visible and not submitting an action.
+A GET calculates elapsed regeneration without rewriting an existing row. An action recalculates regeneration and commits the resulting state. Offline recovery therefore requires no background job. The UI estimates timers from server time and polls approximately every 30 seconds while visible and not submitting an action.
 
 Writes use `UPDATE ... WHERE user_id = ? AND revision = ?`. Only one concurrent request with the same revision can commit. The saved `lastActionId` suppresses an immediate retry of the last committed request; older requests are rejected through revision checking. This is not a complete persistent history of all request IDs.
 
-The save JSON currently uses `saveVersion: 1` with a compatibility normalizer for older unversioned saves. Appearance fields (`gender`, costumes) are added without resetting gold, XP, inventory, or quests. Changing stable gameplay content IDs can still break existing saves; plan compatibility changes before altering them.
+The save JSON uses `saveVersion: 2`. `normalizeSave` migrates version-1 (and unversioned) saves on read: equipped weapon/armour/charm become item instances (charm → amulet), the remaining inventory moves into the bag, energy is rescaled to expedition points, food becomes bread, defeated enemies become kill counts, dungeon progress and claimed quests are kept. Item instances are `{ uid, base, level, quality, prefix?, suffix?, upgrade }`; stats and prices are always recomputed from content tables, never stored. Changing stable content IDs can still break saves; plan compatibility before altering them.
+
+All time effects (points, health, finished work, expired packages, daily reset, market rotation) are applied by the pure `regenerate(state, now)`; daily missions, arena rivals and market stock are derived from a per-save seed, so the client can display them and the server re-derives them to validate actions.
 
 Gameplay actions other than `createCharacter` are rejected until the player finishes gender/name setup.
 
@@ -242,19 +250,31 @@ All responses set `Cache-Control: private, no-store`.
 }
 ```
 
-| Action type            | Fields                                               |
-| ---------------------- | ---------------------------------------------------- |
-| `fight`                | `enemyId`                                            |
-| `dungeon`              | None; the server chooses the saved current stage     |
-| `train`                | `stat`: `strength`, `agility`, `vitality`, or `luck` |
-| `equip`, `buy`, `sell` | `itemId`; use `food` for a food purchase             |
-| `unequip`              | `slot`: `weapon`, `armor`, or `charm`                |
-| `heal`                 | None                                                 |
-| `claim`                | `questId`                                            |
-| `rename`               | `name`, trimmed length 2–24                          |
-| `createCharacter`      | `gender`: `female` or `male`; `name` as in `rename`  |
-| `setGender`            | `gender`: `female` or `male`                         |
-| `wearCostume`          | `costumeId`: `travel`, `ceremonial`, or `null`       |
+| Action type                                             | Fields                                                                 |
+| ------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `fight`                                                 | `enemyId`                                                              |
+| `dungeon`                                               | `dungeonId`, optional `hard` (only chosen at stage 1, after one clear) |
+| `dungeonReset`                                          | `dungeonId`                                                            |
+| `arena`                                                 | `index` 0–4 of the current rivals                                      |
+| `train`                                                 | `stat`: one of the six stats                                           |
+| `equip`, `sell`, `smelt`, `upgrade`, `refine`, `take`   | `uid` of an item (bag, package, or worn as each action allows)         |
+| `unequip`                                               | `slot`                                                                 |
+| `takeAll`                                               | —                                                                      |
+| `bulkPackages`                                          | `mode`: `sell` / `smelt`, `maxQuality` 0–4                             |
+| `buy`                                                   | `index` into the current market stock                                  |
+| `refreshMarket`, `buyBag`, `cancelWork`                 | —                                                                      |
+| `buyFood`                                               | `foodId`, `count` 1–20                                                 |
+| `eat`                                                   | `foodId`                                                               |
+| `blessing`                                              | `blessingId`                                                           |
+| `work`                                                  | `jobId`, `hours` 1/2/4/8                                               |
+| `hireCompanion`                                         | `companionId`                                                          |
+| `setParty`                                              | `companionIds`                                                         |
+| `claim`                                                 | `questId`                                                              |
+| `claimDaily`                                            | `index`                                                                |
+| `setTitle`                                              | `titleId` or `null`                                                    |
+| `rename`, `createCharacter`, `setGender`, `wearCostume` | as in version 1                                                        |
+
+**`GET /api/game?board=honour|fame`** returns the top 25 created characters by honour or fame, marking the caller's row.
 
 Successful actions return `{ state, revision, now, message }`, plus `battle` for combat. Rejected actions return `{ error }`; an initial stale-revision response also includes the latest state. A conflict detected during the SQL update requires a fresh GET.
 
@@ -280,20 +300,20 @@ The API trusts platform-provided identity headers. A deployment outside Sites ne
 
 ## Troubleshooting
 
-| Symptom                                                             | Check / action                                                                        |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| “برای ذخیرهٔ پیشرفت، وارد حساب خود شو.”                             | Use the sign-in link; for local play use the Vite development server on loopback      |
-| Local database reports `no such table: players`                     | Build once, then apply the initial migration to the dev persistence directory         |
-| Initial migration reports `table already exists`                    | Skip initial setup; apply only unapplied new migrations                               |
-| A purchase or battle returns a conflict                             | Refresh the save, inspect the result, then decide whether to submit again             |
-| Build output exists but local gameplay is unauthenticated           | Use `npm run dev`; Wrangler start alone lacks the dev sign-in middleware              |
-| Changing equipment does not raise current health to the new maximum | Extra maximum health is capacity; food/passive recovery fills it                      |
-| A locked opponent cannot be fought                                  | Defeat the previous opponent and meet the region entry requirement                    |
-| An update breaks an existing character                              | Inspect save/content compatibility; no automatic JSON save migration currently exists |
+| Symptom                                                             | Check / action                                                                   |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| “برای ذخیرهٔ پیشرفت، وارد حساب خود شو.”                             | Use the sign-in link; for local play use the Vite development server on loopback |
+| Local database reports `no such table: players`                     | Build once, then apply the initial migration to the dev persistence directory    |
+| Initial migration reports `table already exists`                    | Skip initial setup; apply only unapplied new migrations                          |
+| A purchase or battle returns a conflict                             | Refresh the save, inspect the result, then decide whether to submit again        |
+| Build output exists but local gameplay is unauthenticated           | Use `npm run dev`; Wrangler start alone lacks the dev sign-in middleware         |
+| Changing equipment does not raise current health to the new maximum | Extra maximum health is capacity; food/passive recovery fills it                 |
+| A locked opponent cannot be fought                                  | Defeat the previous opponent and meet the region entry requirement               |
+| An update breaks an existing character                              | Check `normalizeSave`; version-1 saves migrate automatically on the first read   |
 
 ## Scope, provenance, and readiness
 
-This is a private PvE prototype. Public account registration, recovery, mercenary parties, PvP, guilds, auctions, payments, analytics, and operational admin tools are not implemented. Later regions reuse the portrait atlas and use color-treated versions of the environment artwork. Full economy balance, cross-device interaction, accessibility behavior, load handling, and production recovery require further validation.
+This is a private PvE game. Public account registration, recovery, player-vs-player combat, guilds, auctions, payments, analytics, and operational admin tools are not implemented. Arena rivals are generated NPCs. Later regions reuse the three-portrait enemy atlas and colour-treated versions of the environment artwork; helmets, shields, gloves, boots and rings use icons because no wearable art exists for them yet. Full economy balance, cross-device interaction, accessibility behavior, load handling, and production recovery require further validation.
 
 The project uses original generated artwork and game copy, rather than Gameforge assets or code. Vazirmatn's SIL Open Font License is included in [public/fonts/OFL.txt](public/fonts/OFL.txt). No project-wide source license has been selected or included; do not infer one from the font license.
 

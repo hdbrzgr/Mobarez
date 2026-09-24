@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
+  COMPANIONS,
+  partySlots,
   DUNGEONS,
   ENEMIES,
   HARD_LEVEL_BONUS,
@@ -38,6 +40,7 @@ import {
   expeditionEnemy,
   highestRegion,
   minFightHp,
+  partyOf,
   rankTitle,
   rivalCombatant,
   xpScale,
@@ -347,10 +350,101 @@ export function DungeonView({
           </Button>
         </div>
       </div>
+      <PartyPanel game={game} ready={ready} act={act} now={now} />
       <div className="info-note">
         <Zap /> هر تالار ۱ امتیاز سیاه‌چال می‌خواهد (هر ۱۲ دقیقه یک امتیاز). پیروزی
         در سیاه‌چال «نام» می‌دهد؛ سطح دشوار نام و غنیمت بهتر دارد.
       </div>
+    </>
+  );
+}
+
+function PartyPanel({
+  game,
+  now,
+  ready,
+  act,
+}: Pick<ViewProps, 'game' | 'now' | 'ready' | 'act'>) {
+  const slots = partySlots(game.level);
+  const party = partyOf(game, now);
+  const toggle = (id: string) => {
+    const next = game.party.includes(id)
+      ? game.party.filter((x) => x !== id)
+      : [...game.party, id].slice(-slots);
+    act({ type: 'setParty', companionIds: next });
+  };
+  return (
+    <>
+      <div className="section-heading">
+        <h2>
+          <Users /> همراهان سیاه‌چال
+        </h2>
+        <span>
+          {fa(game.party.length)} از {fa(slots)} جا · فرّه توان همراهان را بیشتر
+          می‌کند
+        </span>
+      </div>
+      {slots === 0 && (
+        <p className="info-note">نخستین جای همراه در سطح ۸ باز می‌شود.</p>
+      )}
+      <div className="card-row">
+        {COMPANIONS.map((c) => {
+          const owned = game.companions.includes(c.id);
+          const inParty = game.party.includes(c.id);
+          return (
+            <article
+              key={c.id}
+              className={
+                'panel companion-card' +
+                (inParty ? ' active' : '') +
+                (game.level < c.level ? ' locked' : '')
+              }
+            >
+              <h3>{c.name}</h3>
+              <small className="muted">
+                {c.role === 'guard'
+                  ? 'سپردار'
+                  : c.role === 'healer'
+                    ? 'درمانگر'
+                    : 'جنگاور'}{' '}
+                · از سطح {fa(c.level)}
+              </small>
+              <p>{c.description}</p>
+              {owned ? (
+                <Button
+                  variant={inParty ? 'secondary' : 'outline'}
+                  disabled={!ready || (!inParty && slots === 0)}
+                  onClick={() => toggle(c.id)}
+                >
+                  {inParty ? 'در دسته' : 'افزودن به دسته'}
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  disabled={
+                    !ready || game.level < c.level || game.gold < c.price
+                  }
+                  onClick={() =>
+                    act({ type: 'hireCompanion', companionId: c.id })
+                  }
+                >
+                  استخدام · {fa(c.price)} <Coins />
+                </Button>
+              )}
+            </article>
+          );
+        })}
+      </div>
+      {game.party.length > 0 && (
+        <p className="info-note">
+          توان دسته:{' '}
+          {party.ally ? `${fa(Math.round(party.ally))} آسیب در هر دور · ` : ''}
+          {party.guard
+            ? `${fa(Math.round(party.guard * 100))}٪ کاهش آسیب · `
+            : ''}
+          {party.heal ? `${fa(Math.round(party.heal))} درمان در هر دور` : ''}
+        </p>
+      )}
     </>
   );
 }

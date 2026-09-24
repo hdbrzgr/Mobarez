@@ -199,9 +199,11 @@ This phase requires a concrete audience and deployment decision; documentation a
 
 **Acceptance:** intended users can access only their own progress, saves can be recovered through the documented procedure, a deployment can be rolled back within its stated data-compatibility limits, and failures can be diagnosed. Set concrete load targets when the pilot size is known.
 
+> **24 September 2026:** version 0.2 implements G1, G2, companions and fame from G3, and forge upgrade/refine/smelt from G4. Next: wearable art for the new slots, deploy save v2 with a backup of version-1 rows, then a real-player balance pass against the `npm run simulate` baseline.
+
 ## G1 — Game shell
 
-**Detailed inventory:** [docs/gladiatus-adaptation.md](docs/gladiatus-adaptation.md). This is the Gladiatus-like *base*: city/country, resource bar, more slots, bags, packages, work. It is not extra provinces or mercenaries.
+**Detailed inventory:** [docs/gladiatus-adaptation.md](docs/gladiatus-adaptation.md). This is the Gladiatus-like _base_: city/country, resource bar, more slots, bags, packages, work. It is not extra provinces or mercenaries.
 
 - [ ] Confirm the four G-series decisions in the table below (costumes, four stats, G5 social, no real-money analog).
 - [ ] Split energy into expedition points and dungeon points; migrate current energy without granting extra fights.
