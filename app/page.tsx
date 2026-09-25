@@ -1,70 +1,91 @@
 'use client';
 /* eslint-disable next/no-html-link-for-pages -- Sites sign-in requires a top-level anchor rather than client-side routing. */
-/* eslint-disable next/no-img-element -- Character portraits are static local PNGs composited in the client. */
+/* eslint-disable next/no-img-element -- Character portraits are static local PNGs. */
 
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Swords,
-  Compass,
-  Shield,
-  ScrollText,
-  Dumbbell,
-  ShoppingBag,
-  Flame,
-  Coins,
-  Zap,
-  ChevronLeft,
-  Mountain,
-  Heart,
-  CircleHelp,
-  LockKeyhole,
-  Trophy,
-  Backpack,
-  Utensils,
-  Sparkles,
-  Plus,
-  Check,
-  RefreshCw,
-  Clock3,
+  Anvil,
   BookOpen,
+  Briefcase,
+  Check,
+  ChevronLeft,
+  CircleHelp,
+  Coins,
+  Compass,
+  Crown,
+  Dumbbell,
+  Flame,
+  Hourglass,
+  Landmark,
+  Package,
+  RefreshCw,
+  ScrollText,
+  Shield,
+  ShoppingBag,
+  Sparkles,
+  Swords,
+  Trophy,
+  Users,
+  Utensils,
   X,
-  Leaf,
+  Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
-  DialogTitle,
   DialogDescription,
+  DialogTitle,
 } from '@/components/ui/dialog';
 import { CharacterCreation } from '@/components/character/CharacterCreation';
-import { HeroScreen } from '@/components/character/HeroScreen';
+import { BoardView } from '@/components/game/BoardView';
+import { OverviewView } from '@/components/game/OverviewView';
 import {
-  ENEMIES,
-  REGIONS,
-  ITEMS,
+  ForgeView,
+  MarketView,
+  PackagesView,
+  TempleView,
+  TrainingView,
+  WorkView,
+} from '@/components/game/TownViews';
+import {
+  ArenaView,
+  DungeonView,
+  ExpeditionView,
+} from '@/components/game/CountryViews';
+import {
+  BattleSummary,
+  QuestsView,
+  ReportsView,
+  TitlesView,
+} from '@/components/game/LedgerViews';
+import {
+  Meter,
+  duration,
+  type View,
+  type ViewProps,
+} from '@/components/game/ui';
+import {
+  BLESSINGS,
+  DUNGEON_MAX,
+  DUNGEON_MS,
+  EXPEDITION_MAX,
+  EXPEDITION_MS,
+  FOODS,
+  JOBS,
   QUESTS,
-  DUNGEON,
-  STAT_NAMES,
-  MAX_ENERGY,
-  ENERGY_MS,
-  INVENTORY_CAP,
   fa,
-  type Item,
-  type Slot,
-  type Stat,
 } from '@/lib/game/content';
 import {
+  activeTitle,
+  dailyMissions,
   derived,
-  enemyUnlocked,
   newGame,
   questProgress,
   regenerate,
   returningForAppearance,
-  trainCost,
   xpGoal,
   type Action,
   type Battle,
@@ -79,103 +100,60 @@ type ApiResponse = {
   message?: string;
   battle?: Battle;
 };
-type View =
-  | 'expedition'
-  | 'hero'
-  | 'dungeon'
-  | 'quests'
-  | 'training'
-  | 'market'
-  | 'reports';
-const menus: { id: View; name: string; icon: typeof Compass }[] = [
-  { id: 'expedition', name: 'لشکرکشی', icon: Compass },
-  { id: 'hero', name: 'پهلوان', icon: Shield },
-  { id: 'dungeon', name: 'سیاه‌چال', icon: Flame },
-  { id: 'quests', name: 'مأموریت‌ها', icon: ScrollText },
-  { id: 'training', name: 'تمرین‌گاه', icon: Dumbbell },
-  { id: 'market', name: 'بازار', icon: ShoppingBag },
-  { id: 'reports', name: 'گزارش نبردها', icon: BookOpen },
+type Menu = { id: View; name: string; icon: typeof Compass };
+const GROUPS: { name: string; items: Menu[] }[] = [
+  {
+    name: 'شهر',
+    items: [
+      { id: 'overview', name: 'پهلوان', icon: Shield },
+      { id: 'packages', name: 'بسته‌ها', icon: Package },
+      { id: 'market', name: 'بازار', icon: ShoppingBag },
+      { id: 'forge', name: 'آهنگری', icon: Anvil },
+      { id: 'training', name: 'زورخانه', icon: Dumbbell },
+      { id: 'temple', name: 'معبد', icon: Landmark },
+      { id: 'work', name: 'کار', icon: Briefcase },
+    ],
+  },
+  {
+    name: 'کشور',
+    items: [
+      { id: 'expedition', name: 'لشکرکشی', icon: Compass },
+      { id: 'dungeon', name: 'سیاه‌چال', icon: Flame },
+      { id: 'arena', name: 'میدان', icon: Users },
+    ],
+  },
+  {
+    name: 'دفتر',
+    items: [
+      { id: 'quests', name: 'مأموریت‌ها', icon: ScrollText },
+      { id: 'titles', name: 'لقب و کارنامه', icon: Crown },
+      { id: 'board', name: 'رده‌بندی', icon: Trophy },
+      { id: 'reports', name: 'گزارش نبردها', icon: BookOpen },
+    ],
+  },
 ];
+const MENUS = GROUPS.flatMap((g) => g.items);
 const subtitles: Record<View, string> = {
-  expedition: 'قدم به سرزمین افسانه‌ها بگذار. نامت را ماندگار کن.',
-  hero: 'هر تیغه، هر زره؛ یک گام به سوی پهلوانی.',
-  dungeon: 'سه تالار، یک راز کهن؛ دژ خاموش در انتظار توست.',
-  quests: 'راه پهلوانی با کارهای کوچک و شجاعت‌های بزرگ ساخته می‌شود.',
-  training: 'شمشیر خوب کافی نیست. پهلوان را تمرین می‌سازد.',
+  overview: 'هر تیغه، هر زره؛ یک گام به سوی پهلوانی.',
+  packages: 'غنیمت‌هایت در چاپارخانه چشم‌به‌راه‌اند.',
   market: 'توشهٔ راهت را بردار و برای نبرد بعدی آماده شو.',
+  forge: 'آهن سرد را آتش، پهلوان می‌کند.',
+  training: 'شمشیر خوب کافی نیست. پهلوان را تمرین می‌سازد.',
+  temple: 'هر روز، آزمونی تازه و برکتی تازه.',
+  work: 'بازوی پهلوان در روزهای آرام هم بیکار نمی‌ماند.',
+  expedition: 'قدم به سرزمین افسانه‌ها بگذار. نامت را ماندگار کن.',
+  dungeon: 'تالارهای تاریک، سالاران کهن و گنج‌های فراموش‌شده.',
+  arena: 'آبروی پهلوان در میدان ساخته می‌شود.',
+  quests: 'راه پهلوانی از دشت پارس تا کوه قاف.',
+  titles: 'نام و لقب، یادگار کارهای بزرگ.',
   reports: 'روایت پیروزی‌ها و درس‌های نبردهای تو.',
+  board: 'نام‌آوران این جهان.',
 };
-const rarityNames = { common: 'معمولی', rare: 'کمیاب', epic: 'حماسی' };
-const statCopy: Record<Stat, string> = {
-  strength: 'هر امتیاز، یک واحد قدرت حملهٔ بیشتر.',
-  agility: 'هر امتیاز، ۰٫۸٪ شانس جاخالی بیشتر؛ تا ۳۰٪.',
-  vitality: 'هر امتیاز، ۶ واحد سلامتی بیشتر.',
-  luck: 'هر امتیاز، ۱٫۲٪ شانس ضربهٔ بحرانی بیشتر؛ تا ۳۵٪.',
-};
-function ItemIcon({ slot }: { slot: Slot }) {
-  return slot === 'weapon' ? (
-    <Swords />
-  ) : slot === 'armor' ? (
-    <Shield />
-  ) : (
-    <Sparkles />
-  );
-}
-function ItemStats({ item }: { item: Item }) {
-  return (
-    <div className="item-stats">
-      {item.attack > 0 && (
-        <span>
-          <Swords /> حمله +{fa(item.attack)}
-        </span>
-      )}
-      {item.armor > 0 && (
-        <span>
-          <Shield /> زره +{fa(item.armor)}
-        </span>
-      )}
-      {item.vitality > 0 && (
-        <span>
-          <Heart /> سلامتی +{fa(item.vitality)}
-        </span>
-      )}
-    </div>
-  );
-}
-function Meter({
-  label,
-  value,
-  max,
-  health = false,
-}: {
-  label: string;
-  value: number;
-  max: number;
-  health?: boolean;
-}) {
-  return (
-    <>
-      <div className="meter-label">
-        <span>
-          {health && <Heart />}
-          {label}
-        </span>
-        <span>
-          {fa(value)} / {fa(max)}
-        </span>
-      </div>
-      <Progress
-        value={Math.min(100, (100 * value) / max)}
-        className={health ? 'health-meter' : ''}
-        aria-label={label}
-      />
-    </>
-  );
-}
+const groupOf = (v: View) =>
+  GROUPS.find((g) => g.items.some((m) => m.id === v))!.name;
 
 export default function Home() {
   const [view, setView] = useState<View>('expedition'),
-    [region, setRegion] = useState(0),
     [saved, setSaved] = useState<GameState | null>(null),
     [revision, setRevision] = useState(0),
     [now, setNow] = useState(0),
@@ -240,7 +218,7 @@ export default function Home() {
     const poll = setInterval(() => {
       if (!busyRef.current && document.visibilityState === 'visible')
         void refresh();
-    }, 20000);
+    }, 30000);
     return () => {
       clearTimeout(initial);
       clearInterval(tick);
@@ -252,16 +230,20 @@ export default function Home() {
     const id = setTimeout(() => setNotice(''), 6500);
     return () => clearTimeout(id);
   }, [notice]);
-  const game = regenerate(saved ?? newGame(0), now),
-    stats = derived(game),
+
+  const game = regenerate(saved ?? newGame(0, 1), now || 0),
+    stats = derived(game, now),
     ready = !!saved && !loading && !busy,
-    playable = ready && game.characterCreated,
-    cooldown = Math.max(0, Math.ceil((game.cooldownUntil - now) / 1000)),
-    activeRegion = REGIONS[region],
-    lockedRegion = game.level < activeRegion.level,
-    claimable = QUESTS.filter(
+    playable = ready && game.characterCreated;
+  const claimable =
+    QUESTS.filter(
       (q) => !game.claimed.includes(q.id) && questProgress(game, q) >= q.target,
-    ).length;
+    ).length +
+    (saved
+      ? dailyMissions(game).filter((m) => !m.claimed && m.progress >= m.target)
+          .length
+      : 0);
+
   async function act(action: Action) {
     if (busyRef.current || !saved) return;
     busyRef.current = true;
@@ -288,7 +270,7 @@ export default function Home() {
       if (data.battle) setReport(data.battle);
       if (action.type === 'rename') setRename(false);
       if (action.type === 'createCharacter') {
-        setView('hero');
+        setView('overview');
         setJustCreated(true);
       }
     } catch (e) {
@@ -302,21 +284,25 @@ export default function Home() {
       setBusy(false);
     }
   }
-  const fightLabel = (cost = 1) =>
-    busy
-      ? 'در حال ثبت…'
-      : cooldown
-        ? `آمادگی تا ${fa(cooldown)} ثانیه`
-        : game.hp < 20
-          ? 'نیاز به بازیابی سلامتی'
-          : game.energy < cost
-            ? 'در انتظار انرژی'
-            : 'آغاز نبرد';
-  const fightDisabled = (cost = 1) =>
-    !playable || cooldown > 0 || game.hp < 20 || game.energy < cost;
-  const currentTitle = menus.find((m) => m.id === view)!.name;
-  const questTeaser = QUESTS.find((q) => !game.claimed.includes(q.id));
+  const go = (v: View) => {
+    setJustCreated(false);
+    setView(v);
+    window.scrollTo?.({ top: 0 });
+  };
+  const props: ViewProps = {
+    game,
+    now,
+    ready: playable,
+    act: (a) => void act(a),
+    go,
+  };
+  const current = MENUS.find((m) => m.id === view)!;
   const setupPending = !loading && !!saved && !game.characterCreated;
+  const title = activeTitle(game);
+  const nextQuest = QUESTS.find((q) => !game.claimed.includes(q.id));
+  const work = game.work && game.work.until > now ? game.work : null;
+  const blessings = BLESSINGS.filter((b) => (game.blessings[b.id] ?? 0) > now);
+
   return (
     <div className="game-shell">
       <a className="skip-link" href="#main">
@@ -329,32 +315,44 @@ export default function Home() {
             مبارز<small>افسانه‌ات را زندگی کن</small>
           </span>
         </Link>
-        <div className="chapter">
-          فصل نخست <span>خیزش یک پهلوان</span>
-        </div>
         <nav aria-label="بخش‌های بازی">
-          {menus.map((m) => (
-            <Button
-              key={m.id}
-              variant="ghost"
-              className={'nav-item ' + (m.id === view ? 'active' : '')}
-              disabled={!game.characterCreated}
-              onClick={() => setView(m.id)}
-              aria-current={m.id === view ? 'page' : undefined}
-            >
-              <m.icon />
-              {m.name}
-              {m.id === 'expedition' && (
-                <span className="nav-tag">ماجراجویی</span>
-              )}
-              {m.id === 'quests' && claimable > 0 && (
-                <span className="nav-tag">{fa(claimable)}</span>
-              )}
-            </Button>
+          {GROUPS.map((g) => (
+            <div className="nav-group" key={g.name}>
+              <span className="nav-group-name">{g.name}</span>
+              {g.items.map((m) => (
+                <Button
+                  key={m.id}
+                  variant="ghost"
+                  className={'nav-item ' + (m.id === view ? 'active' : '')}
+                  disabled={!game.characterCreated}
+                  onClick={() => go(m.id)}
+                  aria-current={m.id === view ? 'page' : undefined}
+                >
+                  <m.icon />
+                  {m.name}
+                  {m.id === 'packages' && game.packages.length > 0 && (
+                    <span className="nav-tag">{fa(game.packages.length)}</span>
+                  )}
+                  {m.id === 'quests' && claimable > 0 && (
+                    <span className="nav-tag hot">{fa(claimable)}</span>
+                  )}
+                  {m.id === 'work' && work && (
+                    <span className="nav-tag">
+                      <Hourglass />
+                    </span>
+                  )}
+                  {m.id === 'arena' &&
+                    game.level >= 2 &&
+                    game.cooldowns.arena <= now && (
+                      <span className="nav-tag">آماده</span>
+                    )}
+                </Button>
+              ))}
+            </div>
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <span className="status-dot" /> نسخهٔ آزمایشی · جهان پارس
+          <span className="status-dot" /> جهان ایران · تک‌نفره
           <Button variant="ghost" onClick={() => setHelp(true)}>
             <CircleHelp /> راهنمای بازی
           </Button>
@@ -363,25 +361,30 @@ export default function Home() {
       <div className="game-body">
         <header className="topbar">
           <div className="breadcrumb">
-            جهان پارس <ChevronLeft />{' '}
-            <b>{setupPending ? 'ساخت پهلوان' : currentTitle}</b>
+            {groupOf(view)} <ChevronLeft />{' '}
+            <b>{setupPending ? 'ساخت پهلوان' : current.name}</b>
           </div>
           <div className="resources">
-            <span title="سکه‌های شما">
+            <span title="سکه">
               <Coins /> {saved ? fa(game.gold) : '—'} <small>سکه</small>
             </span>
-            <span title="هر دقیقه یک انرژی بازیابی می‌شود">
-              <Zap /> {saved ? fa(game.energy) : '—'}{' '}
-              <small>/ {fa(MAX_ENERGY)} انرژی</small>
+            <span title="غبار گوهر برای آهنگری" className="dust">
+              <Sparkles /> {saved ? fa(game.dust) : '—'} <small>غبار</small>
             </span>
-            <Button
-              className="profile-chip"
-              variant="ghost"
-              disabled={!game.characterCreated}
-              onClick={() => setView('hero')}
+            <span title="امتیاز لشکرکشی؛ هر ۶ دقیقه یکی" className="points">
+              <Zap /> {saved ? fa(game.expPoints) : '—'}
+              <small>/ {fa(EXPEDITION_MAX)}</small>
+            </span>
+            <span
+              title="امتیاز سیاه‌چال؛ هر ۱۲ دقیقه یکی"
+              className="points dungeon"
             >
-              <Shield /> {game.name}
-            </Button>
+              <Flame /> {saved ? fa(game.dungeonPoints) : '—'}
+              <small>/ {fa(DUNGEON_MAX)}</small>
+            </span>
+            <span title="آبرو" className="honour">
+              <Crown /> {saved ? fa(game.honour) : '—'}
+            </span>
             <Button
               className="help-mobile"
               variant="ghost"
@@ -396,21 +399,14 @@ export default function Home() {
         <main className="main-content" id="main" aria-busy={busy || loading}>
           <div className="page-heading">
             <div>
-              <p className="eyebrow">
-                {view === 'expedition'
-                  ? 'سفر تو از اینجا آغاز می‌شود'
-                  : 'جهان پارس · فصل نخست'}
-              </p>
-              <h1>{setupPending ? 'پهلوانت را بساز' : currentTitle}</h1>
+              <p className="eyebrow">{groupOf(view)} · جهان ایران</p>
+              <h1>{setupPending ? 'پهلوانت را بساز' : current.name}</h1>
               <p>
                 {setupPending
                   ? 'جنسیت را انتخاب کن؛ این انتخاب فقط ظاهر را می‌سازد.'
                   : subtitles[view]}
               </p>
             </div>
-            <span className="season">
-              <span className="status-dot" /> ماجراجویی تک‌نفره
-            </span>
           </div>
           {loading && (
             <output className="connection-note">
@@ -471,661 +467,191 @@ export default function Home() {
               }
             />
           ) : (
-          <div className="adventure-layout">
-            <section className="primary-surface">
-              {view === 'expedition' && (
-                <>
-                  <div className="region-tabs" aria-label="انتخاب سرزمین">
-                    {REGIONS.map((r, i) => (
-                      <Button
-                        key={r.name}
-                        className={region === i ? 'selected' : ''}
-                        variant="ghost"
-                        aria-pressed={region === i}
-                        onClick={() => setRegion(i)}
-                      >
-                        {game.level < r.level && <LockKeyhole />}
-                        {r.name}
-                        {r.level > 1 && <small>سطح {fa(r.level)}</small>}
-                      </Button>
-                    ))}
-                  </div>
-                  <div className={'world-scene ' + activeRegion.mood}>
-                    <div className="scene-shade" />
-                    <div className="scene-content">
-                      <span className="location-label">
-                        <Mountain /> سرزمین {['نخست', 'دوم', 'سوم'][region]} ·
-                        سطح {fa(activeRegion.level)} تا{' '}
-                        {fa(activeRegion.level + 2)}
-                      </span>
-                      <h2>{activeRegion.name}</h2>
-                      <p>
-                        {activeRegion.subtitle}
-                        <br />
-                        {activeRegion.description}
-                      </p>
-                      <span className="scene-note">
-                        <Compass />{' '}
-                        {fa(
-                          ENEMIES.filter(
-                            (e) =>
-                              e.region === region &&
-                              game.defeated.includes(e.id),
-                          ).length,
-                        )}{' '}
-                        از ۳ حریف شکست خورده
-                      </span>
-                    </div>
-                  </div>
-                  {lockedRegion && (
-                    <div className="info-note">
-                      <LockKeyhole /> این سرزمین در سطح {fa(activeRegion.level)}{' '}
-                      باز می‌شود. در پارس تجربه جمع کن.
-                    </div>
-                  )}
-                  <div className="section-heading">
-                    <h2>حریف خود را انتخاب کن</h2>
-                    <span>هر نبرد، یک گام به سوی افسانه</span>
-                  </div>
-                  <div className="enemy-grid">
-                    {ENEMIES.filter((e) => e.region === region).map(
-                      (enemy, index) => {
-                        const unlocked = enemyUnlocked(game, enemy),
-                          beaten = game.defeated.includes(enemy.id);
-                        return (
-                          <article
-                            className={
-                              'enemy-card ' + (!unlocked ? 'locked' : '')
-                            }
-                            key={enemy.id}
-                          >
-                            <div className={'enemy-art enemy-' + enemy.art}>
-                              <span className="level-chip">
-                                سطح {fa(enemy.level)}
-                              </span>
-                              {beaten && (
-                                <span className="beaten-chip" title="شکست‌خورده">
-                                  <Check />
-                                </span>
-                              )}
-                            </div>
-                            <div className="enemy-details">
-                              <h3>{enemy.name}</h3>
-                              <p>{enemy.subtitle}</p>
-                              <div className="enemy-power">
-                                <span>
-                                  <Heart />
-                                  {fa(enemy.hp)}
-                                </span>
-                                <span>
-                                  <Swords />
-                                  {fa(enemy.attack)}
-                                </span>
-                                <span>
-                                  <Shield />
-                                  {fa(enemy.armor)}
-                                </span>
-                              </div>
-                              <div className="reward-line">
-                                <span>
-                                  <Coins />
-                                  {fa(enemy.gold)}–
-                                  {fa(
-                                    enemy.gold +
-                                      Math.ceil(enemy.gold * 0.3) -
-                                      1,
-                                  )}
-                                </span>
-                                <span>تجربه +{fa(enemy.xp)}</span>
-                              </div>
-                              <Button
-                                className={
-                                  'battle-button ' +
-                                  (index === 0 && unlocked
-                                    ? 'primary-battle'
-                                    : '')
-                                }
-                                disabled={!unlocked || fightDisabled()}
-                                onClick={() =>
-                                  void act({ type: 'fight', enemyId: enemy.id })
-                                }
-                              >
-                                {unlocked ? <Swords /> : <LockKeyhole />}
-                                {unlocked ? fightLabel() : 'هنوز کشف نشده'}
-                              </Button>
-                              <p className="card-footnote">
-                                {unlocked ? (
-                                  <>
-                                    <Zap /> ۱ انرژی · غنیمت احتمالی
-                                  </>
-                                ) : lockedRegion ? (
-                                  `نیاز به سطح ${fa(activeRegion.level)}`
-                                ) : (
-                                  'ابتدا حریف قبلی را شکست بده'
-                                )}
-                              </p>
-                            </div>
-                          </article>
-                        );
-                      },
-                    )}
-                  </div>
-                  <div className="expedition-note">
-                    <Clock3 /> نبردها خودکارند؛ تجهیزات و تمرین، نتیجه را تغییر
-                    می‌دهند.<span>آمادگی دوباره: ۸ ثانیه</span>
-                  </div>
-                </>
-              )}
-              {view === 'hero' && (
-                <HeroScreen
-                  game={game}
-                  ready={playable}
-                  justCreated={justCreated}
-                  onAct={(action) => void act(action)}
-                  onExpedition={() => {
-                    setJustCreated(false);
-                    setView('expedition');
-                  }}
-                  onMarket={() => setView('market')}
-                  onRename={() => {
-                    setName(game.name);
-                    setRename(true);
-                  }}
-                />
-              )}
-              {view === 'training' && (
-                <>
-                  <div className="training-banner panel">
-                    <Dumbbell />
-                    <div>
-                      <span className="eyebrow">تمرین‌گاه پهلوانان</span>
-                      <h2>توانایی امروز، پیروزی فردا</h2>
-                      <p>
-                        سکه خرج کن و ویژگی‌های پایه را برای همیشه افزایش بده.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="training-grid">
-                    {(Object.keys(STAT_NAMES) as Stat[]).map((stat, index) => {
-                      const Icon = [Swords, Leaf, Heart, Sparkles][index],
-                        cost = trainCost(game, stat);
-                      return (
-                        <article className="panel training-card" key={stat}>
-                          <div className="training-top">
-                            <Icon />
-                            <span>{STAT_NAMES[stat]}</span>
-                            <strong>{fa(game.stats[stat])}</strong>
-                          </div>
-                          <p>{statCopy[stat]}</p>
-                          <Button
-                            variant="outline"
-                            disabled={!ready || game.gold < cost}
-                            onClick={() => void act({ type: 'train', stat })}
-                          >
-                            <Plus /> تمرین +۱{' '}
-                            <span>
-                              {fa(cost)} <Coins />
-                            </span>
-                          </Button>
-                        </article>
-                      );
-                    })}
-                  </div>
-                  <div className="panel training-outcome">
-                    <h3>توانایی فعلی در نبرد</h3>
-                    <div>
-                      <span>
-                        قدرت حمله <b>{fa(stats.attack)}</b>
-                      </span>
-                      <span>
-                        زره <b>{fa(stats.armor)}</b>
-                      </span>
-                      <span>
-                        جاخالی <b>{fa(Math.round(stats.dodge * 1000) / 10)}٪</b>
-                      </span>
-                      <span>
-                        ضربهٔ بحرانی{' '}
-                        <b>{fa(Math.round(stats.crit * 1000) / 10)}٪</b>
-                      </span>
-                    </div>
-                  </div>
-                  <p className="info-note">
-                    با هر افزایش سطح، یک قدرت و یک استقامت نیز به رایگان می‌گیری.
-                  </p>
-                </>
-              )}
-              {view === 'market' && (
-                <>
-                  <div className="panel market-banner">
-                    <div className="market-icon">
-                      <ShoppingBag />
-                    </div>
-                    <div>
-                      <span className="eyebrow">بازار راه شاهی</span>
-                      <h2>ره‌توشهٔ یک ماجراجو</h2>
-                      <p>
-                        هر خرید به کوله‌پشتی می‌رود؛ تجهیزات را در بخش پهلوان
-                        بپوش.
-                      </p>
-                    </div>
-                    <span className="gold">
-                      <Coins />
-                      {fa(game.gold)}
-                    </span>
-                  </div>
-                  <div className="panel food-card">
-                    <Utensils />
-                    <div>
-                      <h3>خوراک سفر</h3>
-                      <p>بازیابی ۶۰ سلامتی · موجودی: {fa(game.food)}</p>
-                    </div>
-                    <Button
-                      disabled={!ready || game.gold < 20 || game.food >= 99}
-                      onClick={() => void act({ type: 'buy', itemId: 'food' })}
-                    >
-                      خرید · ۲۰ <Coins />
-                    </Button>
-                  </div>
-                  <div className="section-heading">
-                    <h2>سلاح، زره و نشان</h2>
-                    <span>قیمت‌ها ثابت‌اند</span>
-                  </div>
-                  <div className="item-grid">
-                    {ITEMS.map((item) => (
-                      <article
-                        className={'item-card ' + item.rarity}
-                        key={item.id}
-                      >
-                        <div className="item-card-top">
-                          <div className="item-symbol">
-                            <ItemIcon slot={item.slot} />
-                          </div>
-                          <span className="rarity">
-                            {rarityNames[item.rarity]}
-                          </span>
-                        </div>
-                        <h3>{item.name}</h3>
-                        <ItemStats item={item} />
-                        <Button
-                          className="buy-button"
-                          variant="outline"
-                          disabled={
-                            !ready ||
-                            game.gold < item.price ||
-                            game.inventory.length >= INVENTORY_CAP
-                          }
-                          onClick={() =>
-                            void act({ type: 'buy', itemId: item.id })
-                          }
-                        >
-                          خرید{' '}
-                          <span>
-                            {fa(item.price)} <Coins />
-                          </span>
-                        </Button>
-                      </article>
-                    ))}
-                  </div>
-                </>
-              )}
-              {view === 'quests' && (
-                <>
-                  <div className="panel quest-intro">
-                    <ScrollText />
-                    <div>
-                      <h2>روایت پهلوانی تو</h2>
-                      <p>
-                        مأموریت‌ها از آغاز فعال‌اند. پس از تکمیل، پاداش را دریافت
-                        کن.
-                      </p>
-                    </div>
-                    <span>
-                      {fa(game.claimed.length)} / {fa(QUESTS.length)}
-                    </span>
-                  </div>
-                  <div className="quests-list">
-                    {QUESTS.map((q) => {
-                      const progress = Math.min(
-                          q.target,
-                          questProgress(game, q),
-                        ),
-                        claimed = game.claimed.includes(q.id),
-                        complete = progress >= q.target;
-                      return (
-                        <article
-                          className={
-                            'panel quest-row ' + (claimed ? 'claimed' : '')
-                          }
-                          key={q.id}
-                        >
-                          <div className="quest-row-heading">
-                            <div className="quest-seal">
-                              {claimed ? (
-                                <Check />
-                              ) : complete ? (
-                                <Trophy />
-                              ) : (
-                                <ScrollText />
-                              )}
-                            </div>
-                            <div>
-                              <h3>{q.name}</h3>
-                              <p>{q.description}</p>
-                            </div>
-                            <span className="quest-status">
-                              {claimed
-                                ? 'دریافت‌شده'
-                                : complete
-                                  ? 'آمادهٔ دریافت'
-                                  : 'در حال انجام'}
-                            </span>
-                          </div>
-                          <div className="quest-progress">
-                            <Progress
-                              value={(progress / q.target) * 100}
-                              aria-label={`پیشرفت ${q.name}`}
-                            />
-                            <span>
-                              {fa(progress)} / {fa(q.target)}
-                            </span>
-                          </div>
-                          <div className="quest-row-bottom">
-                            <span>
-                              <Coins />
-                              {fa(q.gold)} سکه <Sparkles />
-                              {fa(q.xp)} تجربه
-                            </span>
-                            <Button
-                              variant={
-                                complete && !claimed ? 'default' : 'outline'
-                              }
-                              disabled={!ready || !complete || claimed}
-                              onClick={() =>
-                                void act({ type: 'claim', questId: q.id })
-                              }
-                            >
-                              {claimed ? (
-                                <>
-                                  <Check /> دریافت شد
-                                </>
-                              ) : complete ? (
-                                'دریافت پاداش'
-                              ) : (
-                                'در انتظار تکمیل'
-                              )}
-                            </Button>
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-              {view === 'dungeon' && (
-                <>
-                  <div className="world-scene dungeon-scene">
-                    <div className="scene-shade" />
-                    <div className="scene-content">
-                      <span className="location-label">
-                        <Flame /> سیاه‌چال نخست · از سطح ۳
-                      </span>
-                      <h2>دژ خاموش</h2>
-                      <p>
-                        در تالارهای متروک دژ، سایه‌ای کهن بیدار شده است.
-                        <br />
-                        سه نگهبان را شکست بده و نشان سیمرغ را به دست بیاور.
-                      </p>
-                      <span className="scene-note">
-                        <Trophy /> پاداش پایانی: نشان حماسی سیمرغ
-                      </span>
-                    </div>
-                  </div>
-                  <div className="dungeon-trail">
-                    {DUNGEON.map((e, i) => (
-                      <div
-                        className={
-                          game.dungeonStage === i
-                            ? 'current'
-                            : game.dungeonStage > i
-                              ? 'cleared'
-                              : ''
-                        }
-                        key={e.id}
-                      >
-                        <span>
-                          {game.dungeonStage > i ? <Check /> : fa(i + 1)}
-                        </span>
-                        <h3>{e.name}</h3>
-                        <small>{e.subtitle}</small>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="panel dungeon-action">
-                    <div>
-                      <span className="eyebrow">
-                        {game.level < 3
-                          ? 'این مسیر هنوز باز نشده'
-                          : `تالار ${fa(game.dungeonStage + 1)} از ۳`}
-                      </span>
-                      <h2>{DUNGEON[game.dungeonStage].name}</h2>
-                      <p>
-                        <Heart /> {fa(DUNGEON[game.dungeonStage].hp)} سلامتی{' '}
-                        <Swords /> {fa(DUNGEON[game.dungeonStage].attack)} حمله
-                      </p>
-                    </div>
-                    <Button
-                      className="primary-battle"
-                      disabled={game.level < 3 || fightDisabled(2)}
-                      onClick={() => void act({ type: 'dungeon' })}
-                    >
-                      {game.level < 3 ? <LockKeyhole /> : <Swords />}
-                      {game.level < 3 ? 'نیاز به سطح ۳' : fightLabel(2)}
-                    </Button>
-                  </div>
-                  <div className="info-note">
-                    <Zap /> هر تالار ۲ انرژی می‌خواهد. پیشرفت تالارها با خروج یا
-                    شکست حفظ می‌شود.
-                  </div>
-                  <div className="panel dungeon-prize">
-                    <Sparkles />
-                    <div>
-                      <h3>نشان سیمرغ</h3>
-                      <p>۵ حمله · ۴ زره · ۳۰ سلامتی اضافه</p>
-                      <small>
-                        با پایان تالار سوم، نشان به کوله‌پشتی اضافه می‌شود و دژ از
-                        نو آغاز می‌شود.
-                      </small>
-                    </div>
-                  </div>
-                </>
-              )}
-              {view === 'reports' && (
-                <>
-                  {game.history.length === 0 ? (
-                    <div className="empty-state panel">
-                      <BookOpen />
-                      <h2>نخستین روایت هنوز نوشته نشده</h2>
-                      <p>یک لشکرکشی آغاز کن تا گزارش نبرد اینجا ثبت شود.</p>
-                      <Button onClick={() => setView('expedition')}>
-                        <Compass /> شروع ماجراجویی
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="report-list">
-                      {game.history.map((b) => (
-                        <Button
-                          variant="ghost"
-                          className="report-row"
-                          key={b.id}
-                          onClick={() => setReport(b)}
-                        >
-                          <span
-                            className={
-                              'report-symbol ' + (b.won ? 'win' : 'loss')
-                            }
-                          >
-                            {b.won ? <Trophy /> : <Shield />}
-                          </span>
-                          <span className="report-name">
-                            <b>{b.enemy}</b>
-                            <small>
-                              {b.dungeon ? 'سیاه‌چال' : 'لشکرکشی'} ·{' '}
-                              {new Date(b.at).toLocaleString('fa-IR', {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
-                            </small>
-                          </span>
-                          <span className={b.won ? 'gold' : 'loss-text'}>
-                            {b.won ? 'پیروزی' : 'شکست'}
-                          </span>
-                          <span className="report-gold">
-                            +{fa(b.gold)} <Coins />
-                          </span>
-                          <ChevronLeft />
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-                  <p className="info-note">
-                    ۲۰ نبرد اخیر در دفتر سفر نگه داشته می‌شود. پاداش هر نبرد همان
-                    لحظه ثبت شده است.
-                  </p>
-                </>
-              )}
-            </section>
-            <aside className="player-column">
-              <div className="panel player-panel">
-                <div className="player-emblem">
-                  {game.appearance.gender ? (
-                    <img
-                      src={`/art/character/${game.appearance.gender}-portrait.png`}
-                      alt=""
-                    />
-                  ) : (
-                    <Shield />
-                  )}
-                </div>
-                <h2>{game.name}</h2>
-                <p>
-                  {game.level < 3
-                    ? 'مسافر سرزمین پارس'
-                    : game.level < 5
-                      ? 'نگهبان راه شاهی'
-                      : 'پهلوان سرزمین ایران'}
-                </p>
-                <span className="rank">
-                  سطح {fa(game.level)} ·{' '}
-                  {game.level < 3
-                    ? 'نوآموز'
-                    : game.level < 5
-                      ? 'جنگاور'
-                      : 'پهلوان'}
-                </span>
-                <Meter label="سلامتی" value={game.hp} max={stats.maxHp} health />
-                <Meter label="تجربه" value={game.xp} max={xpGoal(game.level)} />
-                <div className="stat-pair">
-                  <span>
-                    <Swords /> قدرت حمله <b>{fa(stats.attack)}</b>
-                  </span>
-                  <span>
-                    <Shield /> زره <b>{fa(stats.armor)}</b>
-                  </span>
-                </div>
-                <Button
-                  className="heal-button"
-                  variant="outline"
-                  disabled={!playable || game.hp >= stats.maxHp || game.food < 1}
-                  onClick={() => void act({ type: 'heal' })}
-                >
-                  <Utensils /> خوردن خوراک <span>{fa(game.food)}</span>
-                </Button>
-                <small className="regen-note">
-                  {game.hp < stats.maxHp
-                    ? 'هر ۳۰ ثانیه، ۶ سلامتی بازیابی می‌شود.'
-                    : 'سلامتی کامل؛ آمادهٔ ماجراجویی'}
-                </small>
-              </div>
-              <div className="panel energy-panel">
-                <div>
-                  <Zap />
-                  <span>انرژی ماجراجویی</span>
-                  <b>{fa(game.energy)} / ۱۲</b>
-                </div>
-                <Progress
-                  value={(game.energy / MAX_ENERGY) * 100}
-                  aria-label="انرژی"
-                />
-                <small>
-                  {game.energy < MAX_ENERGY
-                    ? `انرژی بعدی تا ${fa(Math.max(0, Math.ceil((game.energyAt + ENERGY_MS - now) / 1000)))} ثانیه`
-                    : 'انرژی کامل است. وقت سفر رسیده!'}
-                </small>
-              </div>
-              {questTeaser ? (
-                <div className="panel quest-teaser">
-                  <span className="eyebrow">
-                    <ScrollText /> مأموریت پیش رو
-                  </span>
-                  <h3>{questTeaser.name}</h3>
-                  <p>{questTeaser.description}</p>
-                  <Progress
-                    value={Math.min(
-                      100,
-                      (questProgress(game, questTeaser) / questTeaser.target) *
-                        100,
-                    )}
-                    aria-label="پیشرفت مأموریت"
+            <div className="adventure-layout">
+              <section className="primary-surface">
+                {view === 'overview' && (
+                  <OverviewView
+                    {...props}
+                    justCreated={justCreated}
+                    onRename={() => {
+                      setName(game.name);
+                      setRename(true);
+                    }}
                   />
-                  <div className="reward-line">
-                    <span>
-                      {fa(
-                        Math.min(
-                          questTeaser.target,
-                          questProgress(game, questTeaser),
-                        ),
-                      )}{' '}
-                      از {fa(questTeaser.target)}
-                    </span>
-                    <span className="gold">{fa(questTeaser.gold)} سکه</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    className="quest-link"
-                    onClick={() => setView('quests')}
+                )}
+                {view === 'packages' && <PackagesView {...props} />}
+                {view === 'market' && <MarketView {...props} />}
+                {view === 'forge' && <ForgeView {...props} />}
+                {view === 'training' && <TrainingView {...props} />}
+                {view === 'temple' && <TempleView {...props} />}
+                {view === 'work' && <WorkView {...props} />}
+                {view === 'expedition' && (
+                  <ExpeditionView {...props} busy={busy} />
+                )}
+                {view === 'dungeon' && <DungeonView {...props} busy={busy} />}
+                {view === 'arena' && <ArenaView {...props} busy={busy} />}
+                {view === 'quests' && <QuestsView {...props} />}
+                {view === 'titles' && <TitlesView {...props} />}
+                {view === 'board' && <BoardView {...props} />}
+                {view === 'reports' && (
+                  <ReportsView {...props} onOpen={setReport} />
+                )}
+              </section>
+              <aside className="player-column">
+                <div className="panel player-panel">
+                  <button
+                    type="button"
+                    className="player-emblem"
+                    onClick={() => go('overview')}
+                    aria-label="پهلوان"
                   >
-                    دیدن مأموریت‌ها <ChevronLeft />
-                  </Button>
+                    {game.appearance.gender ? (
+                      <img
+                        src={`/art/character/${game.appearance.gender}-portrait.png`}
+                        alt=""
+                      />
+                    ) : (
+                      <Shield />
+                    )}
+                  </button>
+                  <h2>{game.name}</h2>
+                  <p>{title.name}</p>
+                  <span className="rank">سطح {fa(game.level)}</span>
+                  <Meter
+                    label="سلامتی"
+                    value={game.hp}
+                    max={stats.maxHp}
+                    tone="health"
+                  />
+                  <Meter
+                    label="تجربه"
+                    value={game.xp}
+                    max={xpGoal(game.level)}
+                    tone="xp"
+                  />
+                  <div className="food-quick" aria-label="خوردن خوراک">
+                    {FOODS.map((f) => (
+                      <Button
+                        key={f.id}
+                        variant="outline"
+                        title={`${f.name} · ${fa(f.heal * 100)}٪ سلامتی`}
+                        disabled={
+                          !playable ||
+                          game.food[f.id] < 1 ||
+                          game.hp >= stats.maxHp
+                        }
+                        onClick={() => void act({ type: 'eat', foodId: f.id })}
+                      >
+                        <Utensils /> {f.name}
+                        <span>{fa(game.food[f.id])}</span>
+                      </Button>
+                    ))}
+                  </div>
+                  <small className="regen-note">
+                    {game.hp < stats.maxHp
+                      ? `بازیابی ${fa(Math.round(stats.regen))} سلامتی در دقیقه`
+                      : 'سلامتی کامل؛ آمادهٔ ماجراجویی'}
+                  </small>
                 </div>
-              ) : (
-                <div className="panel quest-teaser">
-                  <Trophy />
-                  <h3>همهٔ مأموریت‌ها انجام شد!</h3>
-                  <p>دژ را دوباره فتح کن و تجهیزاتت را کامل کن.</p>
+                <div className="panel energy-panel">
+                  <Meter
+                    label="امتیاز لشکرکشی"
+                    value={game.expPoints}
+                    max={EXPEDITION_MAX}
+                    tone="points"
+                  />
+                  <small>
+                    {game.expPoints < EXPEDITION_MAX
+                      ? `امتیاز بعدی تا ${duration(game.expAt + EXPEDITION_MS - now)}`
+                      : 'امتیاز کامل است.'}
+                  </small>
+                  <Meter
+                    label="امتیاز سیاه‌چال"
+                    value={game.dungeonPoints}
+                    max={DUNGEON_MAX}
+                    tone="points"
+                  />
+                  <small>
+                    {game.dungeonPoints < DUNGEON_MAX
+                      ? `امتیاز بعدی تا ${duration(game.dungeonAt + DUNGEON_MS - now)}`
+                      : 'امتیاز کامل است.'}
+                  </small>
+                  <small>
+                    میدان:{' '}
+                    {game.cooldowns.arena > now
+                      ? duration(game.cooldowns.arena - now)
+                      : 'آماده'}
+                  </small>
                 </div>
-              )}
-              <p className="side-tip">
-                <Flame /> هر افسانه با نخستین قدم آغاز می‌شود.
-              </p>
-            </aside>
-          </div>
+                {(work || blessings.length > 0) && (
+                  <div className="panel status-panel">
+                    {work && (
+                      <button type="button" onClick={() => go('work')}>
+                        <Briefcase />{' '}
+                        {JOBS.find((j) => j.id === work.jobId)?.name} ·{' '}
+                        {duration(work.until - now)}
+                      </button>
+                    )}
+                    {blessings.map((b) => (
+                      <button
+                        type="button"
+                        key={b.id}
+                        onClick={() => go('temple')}
+                      >
+                        <Sparkles /> {b.name} ·{' '}
+                        {duration((game.blessings[b.id] ?? 0) - now)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {nextQuest ? (
+                  <div className="panel quest-teaser">
+                    <span className="eyebrow">
+                      <ScrollText /> مأموریت پیش رو
+                    </span>
+                    <h3>{nextQuest.name}</h3>
+                    <p>{nextQuest.description}</p>
+                    <div className="reward-line">
+                      <span>
+                        {fa(
+                          Math.min(
+                            nextQuest.target,
+                            questProgress(game, nextQuest),
+                          ),
+                        )}{' '}
+                        از {fa(nextQuest.target)}
+                      </span>
+                      <span className="gold">{fa(nextQuest.gold)} سکه</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      className="quest-link"
+                      onClick={() => go('quests')}
+                    >
+                      دیدن مأموریت‌ها <ChevronLeft />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="panel quest-teaser">
+                    <Trophy />
+                    <h3>همهٔ مأموریت‌های داستان انجام شد!</h3>
+                    <p>
+                      در معبد مأموریت روزانه بگیر و سیاه‌چال‌های دشوار را فتح کن.
+                    </p>
+                  </div>
+                )}
+              </aside>
+            </div>
           )}
           <footer>
             مبارز <span>داستانی تازه در سرزمین افسانه‌های ایران</span>
             <span>
-              {saved ? 'پیشرفت به‌صورت خودکار ذخیره می‌شود' : 'نسخهٔ نخست · PvE'}
+              {saved ? 'پیشرفت به‌صورت خودکار ذخیره می‌شود' : 'نسخهٔ دوم · PvE'}
             </span>
           </footer>
         </main>
       </div>
-      <Dialog
-        open={!!report}
-        onOpenChange={(open) => {
-          if (!open) setReport(null);
-        }}
-      >
+      <Dialog open={!!report} onOpenChange={(open) => !open && setReport(null)}>
         <DialogContent className="battle-dialog" dir="rtl">
           {report && (
             <>
@@ -1136,7 +662,11 @@ export default function Home() {
               >
                 {report.won ? <Trophy /> : <Shield />}
                 <span>
-                  {report.dungeon ? 'گزارش سیاه‌چال' : 'گزارش لشکرکشی'}
+                  {report.kind === 'dungeon'
+                    ? 'گزارش سیاه‌چال'
+                    : report.kind === 'arena'
+                      ? 'گزارش میدان'
+                      : 'گزارش لشکرکشی'}
                 </span>
                 <DialogTitle>
                   {report.won
@@ -1144,71 +674,42 @@ export default function Home() {
                     : 'این نبرد پایان راه نیست'}
                 </DialogTitle>
                 <DialogDescription>
-                  نبرد با {report.enemy} · {fa(report.rounds.length)} دور
+                  نبرد با {report.enemy} (سطح {fa(report.enemyLevel ?? 0)}) ·{' '}
+                  {fa(report.rounds.length)} دور
                 </DialogDescription>
               </div>
-              <div className="battle-rewards">
-                <span>
-                  <Coins />
-                  <b>+{fa(report.gold)}</b> سکه
-                </span>
-                <span>
-                  <Sparkles />
-                  <b>+{fa(report.xp)}</b> تجربه
-                </span>
-                <span>
-                  <Heart />
-                  <b>{fa(report.rounds.at(-1)?.playerHp ?? 0)}</b> سلامتی پایان
-                  نبرد
-                </span>
-              </div>
-              {report.loot && (
-                <div className="loot-reward">
-                  <Backpack />
-                  <div>
-                    <small>غنیمت به کوله‌پشتی اضافه شد</small>
-                    <b>{ITEMS.find((i) => i.id === report.loot)?.name}</b>
-                  </div>
+              {report.enemyMaxHp > 0 && (
+                <div className="duel-bars">
+                  <Meter
+                    label="تو"
+                    value={report.rounds.at(-1)?.playerHp ?? 0}
+                    max={report.playerMaxHp}
+                    tone="health"
+                  />
+                  <Meter
+                    label={report.enemy}
+                    value={report.rounds.at(-1)?.enemyHp ?? 0}
+                    max={report.enemyMaxHp}
+                  />
+                </div>
+              )}
+              <BattleSummary report={report} />
+              <div className="item-actions">
+                {report.loot && (
                   <Button
                     variant="outline"
                     onClick={() => {
                       setReport(null);
-                      setView('hero');
+                      go('packages');
                     }}
                   >
-                    دیدن غنیمت
+                    <Package /> بسته‌ها
                   </Button>
-                </div>
-              )}
-              <details className="combat-log">
-                <summary>
-                  روایت دور به دور نبرد <ChevronLeft />
-                </summary>
-                <ol>
-                  {report.rounds.map((r) => (
-                    <li key={r.round}>
-                      <span>دور {fa(r.round)}</span>
-                      <p>
-                        {r.critical ? 'ضربهٔ بحرانی! ' : ''}
-                        {fa(r.dealt)} آسیب وارد کردی.{' '}
-                        {r.enemyHp === 0
-                          ? 'حریف از پا درآمد.'
-                          : r.dodged
-                            ? 'از ضربهٔ حریف جاخالی دادی.'
-                            : `${fa(r.taken)} آسیب دریافت کردی.`}
-                      </p>
-                    </li>
-                  ))}
-                </ol>
-              </details>
-              <p className="battle-note">
-                {report.won
-                  ? 'پاداش‌ها ثبت شدند. برای نبرد بعدی آماده شو.'
-                  : 'سلامتی بازیابی کن، تمرین بده و تجهیزات قوی‌تر بپوش.'}
-              </p>
-              <Button onClick={() => setReport(null)}>
-                ادامهٔ ماجراجویی <ChevronLeft />
-              </Button>
+                )}
+                <Button onClick={() => setReport(null)}>
+                  ادامه <ChevronLeft />
+                </Button>
+              </div>
             </>
           )}
         </DialogContent>
@@ -1217,49 +718,48 @@ export default function Home() {
         <DialogContent className="help-dialog" dir="rtl">
           <DialogTitle>راهنمای مبارز</DialogTitle>
           <DialogDescription>
-            یک ماجراجویی کوتاه در ایران اسطوره‌ای
+            یک بازی نقش‌آفرینی مرورگری در ایران اسطوره‌ای
           </DialogDescription>
           <ol className="help-steps">
             <li>
-              <b>۱. پهلوانت را بساز</b>
+              <b>۱. کشور: لشکرکشی، سیاه‌چال و میدان</b>
               <p>
-                جنسیت را انتخاب کن و نام بگذار. زن و مرد توانایی یکسان دارند؛ این
-                انتخاب فقط ظاهر را می‌سازد.
+                لشکرکشی هر بار ۱ امتیاز می‌خواهد (۲۴ امتیاز، هر ۶ دقیقه یکی).
+                سیاه‌چال امتیاز جدا دارد (۱۲ امتیاز، هر ۱۲ دقیقه یکی). میدان هر
+                ۱۰ دقیقه یک نبرد است.
               </p>
             </li>
             <li>
-              <b>۲. لشکرکشی کن</b>
+              <b>۲. غنیمت به بسته‌ها می‌رود</b>
               <p>
-                از گرگ خاکستری شروع کن. پیروزی، حریف بعدی را باز می‌کند و سکه،
-                تجربه و گاهی غنیمت می‌دهد.
+                بسته‌ها را باز کن، بهترین را بپوش و بقیه را بفروش یا در آهنگری
+                گداز کن. بستهٔ باز نشده پس از ۷ روز فروخته می‌شود.
               </p>
             </li>
             <li>
-              <b>۳. قوی‌تر شو</b>
+              <b>۳. شهر: قوی‌تر شو</b>
               <p>
-                در تمرین‌گاه ویژگی‌ها را افزایش بده. تجهیزات بازار و غنیمت‌ها را در
-                بخش پهلوان بپوش؛ پوشاک فقط ظاهر را تغییر می‌دهد.
+                در زورخانه شش ویژگی را تمرین بده، در آهنگری تجهیزات را تا +۱۰
+                تقویت کن و درجهٔ آن‌ها را بالا ببر، در معبد برکت بگیر.
               </p>
             </li>
             <li>
-              <b>۴. توشه بردار</b>
+              <b>۴. هر روز سر بزن</b>
               <p>
-                هر دقیقه یک انرژی و هر ۳۰ ثانیه شش سلامتی برمی‌گردد. خوراک سفر، تا
-                ۶۰ سلامتی بازیابی می‌کند.
+                معبد هر روز چهار مأموریت تازه دارد. وقتی از بازی دوری، پهلوانت
+                را سر کار بفرست تا مزد بگیرد.
               </p>
             </li>
             <li>
-              <b>۵. پاداش بگیر و دژ را فتح کن</b>
+              <b>۵. آبرو و نام</b>
               <p>
-                پاداش مأموریت‌ها را دستی دریافت کن. سیاه‌چال سه‌مرحله‌ای و هیرکانی
-                در سطح ۳ و البرز در سطح ۵ باز می‌شوند.
+                آبرو از لشکرکشی و میدان رتبه و لقب می‌آورد؛ نام از سیاه‌چال‌ها.
+                لقب‌ها ویژگی‌ها را درصدی بالا می‌برند.
               </p>
             </li>
           </ol>
           <p className="info-note">
-            این نسخه تک‌نفره و الهام‌گرفته از اسطوره‌های ایران است. پیشرفت روی حساب
-            شما ذخیره می‌شود. در کوله‌پشتی پر، غنیمت تازه به ۴۰٪ ارزش فروشگاهی
-            تبدیل می‌شود.
+            نُه سرزمین از پارس تا کوه قاف، نُه سیاه‌چال و سطح تا ۸۰ در انتظار توست.
           </p>
           <Button onClick={() => setHelp(false)}>
             آماده‌ام؛ به سوی ماجراجویی

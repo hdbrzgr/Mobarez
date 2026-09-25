@@ -8,6 +8,29 @@
 
 This is an evidence record, not a completion percentage. “Implemented” means the behavior exists in source. It does not imply browser verification, production load testing, or player validation. Historical checks below are dated; they were not rerun merely to edit this documentation.
 
+## Version 0.2 — month-long Gladiatus-style game — 24 September 2026
+
+Goal: make the game play like Gladiatus and hold a player for at least a month. Implemented in source on branch `claude/upbeat-franklin-empkd4`; **not yet deployed**.
+
+| Area      | Delivered                                                                                                                                                                                                                                    |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shell     | Town (پهلوان، بسته‌ها، بازار، آهنگری، زورخانه، معبد، کار), country (لشکرکشی، سیاه‌چال، میدان), ledger (مأموریت‌ها، لقب و کارنامه، رده‌بندی، گزارش‌ها); resource bar with gold, dust, both point pools, honour                                |
+| Items     | 80 bases (8 slots × 10 tiers), 14 prefixes, 13 suffixes with slot bans, 5 quality colours, wear level, upgrade +10, refine, smelt to dust                                                                                                    |
+| Loot flow | Package inbox with take/sell/smelt, bulk actions by quality, 7-day expiry, 150 cap; bag 40 → 100                                                                                                                                             |
+| World     | 9 provinces / 36 opponents (levels 1–73); 9 dungeons (levels 3–80) with hard mode; NPC arena with rotating rivals                                                                                                                            |
+| Systems   | Split expedition/dungeon points, six trainable stats, crit/dodge/block/double-hit combat, work shifts, rotating market, foods, blessings, daily missions, 41 story quests, 7 ranks + 13 earned titles, 6 dungeon companions, highscore board |
+| Saves     | `saveVersion: 2` with automatic migration from version 1                                                                                                                                                                                     |
+| Pacing    | `npm run simulate` bot: day 30 ≈ L38 casual / L60 engaged / L70 hardcore; final boss and Qaf dungeon remain for all three                                                                                                                    |
+
+| Check                                                | Result (24 September 2026)                                                                                                                                       |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm test`                                           | 24 engine tests passed, including v1 migration and the 30-day pacing test                                                                                        |
+| `npm run typecheck`, `npm run lint`, `npm run build` | Passed                                                                                                                                                           |
+| `node scripts/api-smoke.mjs`                         | Passed against local dev server with a fresh local D1                                                                                                            |
+| Browser                                              | Headless Chromium walk-through at 1440×1000 and 390×844: sign-in, creation, fights, every screen rendered without runtime errors; not a full accessibility audit |
+
+Known limits: no wearable art for helmet/shield/gloves/boots/ring (icons are shown); later provinces reuse the three-portrait enemy atlas with colour treatment; arena rivals are NPCs, not players; balance is bot-tested, not player-tested.
+
 ## Release baseline
 
 | Item                        | Last confirmed state                                                                                |
@@ -26,17 +49,17 @@ These commits identify the application baseline before the README/PROGRESS/PLAN 
 
 The user prioritized choosing gender first, then seeing a character wear equipment and costumes. The [UX specification](docs/UX.md) defines onboarding, desktop/mobile layouts, slot and inventory interactions, costume precedence, save compatibility, asset requirements, and acceptance criteria. [The generated concept](docs/ux/character-concept.png) illustrates the visual direction; [its provenance](docs/ux/character-concept.md) records the exact prompt and limitations.
 
-| Deliverable                                        | Status                                                                                          |
-| -------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| User requirements and reference interpretation     | Documented                                                                                      |
-| Character creation / equipment / wardrobe UX       | Specified                                                                                       |
-| Original static visual concept                     | Generated and visually inspected; not a production sprite set                                   |
-| U0 implementation sequence and acceptance criteria | Added to PLAN                                                                                   |
-| Gender/name onboarding in the running game         | Implemented in source; engine/API tests cover setup, migration and locks                        |
-| Full-body character with visible item layers       | Implemented with sliced female/male outfit variants plus weapon/charm overlays                  |
-| Cosmetic wardrobe and later gender editing         | Implemented; two owned costumes and `setGender`                                                 |
-| Appearance save migration and API actions          | Implemented (`saveVersion` 1, `createCharacter`, `setGender`, `wearCostume`)                    |
-| Browser validation of the new UX                   | Not yet recorded as a complete acceptance pass                                                  |
+| Deliverable                                        | Status                                                                         |
+| -------------------------------------------------- | ------------------------------------------------------------------------------ |
+| User requirements and reference interpretation     | Documented                                                                     |
+| Character creation / equipment / wardrobe UX       | Specified                                                                      |
+| Original static visual concept                     | Generated and visually inspected; not a production sprite set                  |
+| U0 implementation sequence and acceptance criteria | Added to PLAN                                                                  |
+| Gender/name onboarding in the running game         | Implemented in source; engine/API tests cover setup, migration and locks       |
+| Full-body character with visible item layers       | Implemented with sliced female/male outfit variants plus weapon/charm overlays |
+| Cosmetic wardrobe and later gender editing         | Implemented; two owned costumes and `setGender`                                |
+| Appearance save migration and API actions          | Implemented (`saveVersion` 1, `createCharacter`, `setGender`, `wearCostume`)   |
+| Browser validation of the new UX                   | Not yet recorded as a complete acceptance pass                                 |
 
 Design defaults: gender affects appearance only; later gender changes retain progress; two initial private-MVP costumes are free cosmetics; visible equipment keeps the current three slots. No new application release was made for this implementation until U0.4 verification.
 
@@ -61,21 +84,21 @@ Design defaults: gender affects appearance only; later gender changes retain pro
 
 ## Verification record
 
-| Check                           | Result and date                                                                                                | Practical limit                                                     |
-| ------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `npm run build`                 | Passed; latest metadata build 14 September 2026                                                                | Compilation does not prove browser behavior                         |
-| `npm run typecheck`             | Passed during final implementation checks, 13 September 2026 UTC                                               | Does not validate arbitrary JSON at runtime                         |
-| `npm run lint`                  | Passed during final implementation checks, 13 September 2026 UTC                                               | Does not replace accessibility testing                              |
-| `npm test`                      | 16 engine tests passed, 14 September 2026                                                        | Pure engine tests; no hosted database                                        |
-| Local character UX              | Gender setup, full-body stage, bronze-blade preview, travel costume apply checked locally, 14 September 2026 | One signed-in local save; not a full U0.4 device/accessibility matrix        |
-| Starter battle simulation       | 250 seeded encounters exercised within the engine suite                                                        | Starter viability only; no full-progression or retention claim      |
-| Local API smoke checks          | Passed after dependency updates, 13 September 2026 UTC                                                         | One local identity; changes test data                               |
-| Local document/assets           | Persian RTL document, metadata, font and image routes checked, 13 September 2026 UTC                           | HTTP/source checks, not rendered visual inspection                  |
-| Final metadata origin           | Local rendered Open Graph/X metadata checked, 14 September 2026                                                | No end-to-end social crawler test                                   |
-| Hosted release                  | Deployment succeeded; live `players` table and private access confirmed, 14 September 2026                     | Signed-in hosted gameplay was not exercised through automation      |
-| Production dependencies         | `npm audit --omit=dev` reported zero advisories during implementation, 13 September 2026 UTC                   | Dated audit result; advisory data can change                        |
-| Development dependencies        | Four moderate advisories remained in the Drizzle Kit / legacy esbuild dependency chain at implementation close | No incompatible override or forced downgrade applied                |
-| Browser/mobile/accessibility QA | **Not performed**; browser tooling was unavailable                                                             | Responsive CSS, dialogs, touch behavior and focus remain unverified |
+| Check                           | Result and date                                                                                                | Practical limit                                                       |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `npm run build`                 | Passed; latest metadata build 14 September 2026                                                                | Compilation does not prove browser behavior                           |
+| `npm run typecheck`             | Passed during final implementation checks, 13 September 2026 UTC                                               | Does not validate arbitrary JSON at runtime                           |
+| `npm run lint`                  | Passed during final implementation checks, 13 September 2026 UTC                                               | Does not replace accessibility testing                                |
+| `npm test`                      | 16 engine tests passed, 14 September 2026                                                                      | Pure engine tests; no hosted database                                 |
+| Local character UX              | Gender setup, full-body stage, bronze-blade preview, travel costume apply checked locally, 14 September 2026   | One signed-in local save; not a full U0.4 device/accessibility matrix |
+| Starter battle simulation       | 250 seeded encounters exercised within the engine suite                                                        | Starter viability only; no full-progression or retention claim        |
+| Local API smoke checks          | Passed after dependency updates, 13 September 2026 UTC                                                         | One local identity; changes test data                                 |
+| Local document/assets           | Persian RTL document, metadata, font and image routes checked, 13 September 2026 UTC                           | HTTP/source checks, not rendered visual inspection                    |
+| Final metadata origin           | Local rendered Open Graph/X metadata checked, 14 September 2026                                                | No end-to-end social crawler test                                     |
+| Hosted release                  | Deployment succeeded; live `players` table and private access confirmed, 14 September 2026                     | Signed-in hosted gameplay was not exercised through automation        |
+| Production dependencies         | `npm audit --omit=dev` reported zero advisories during implementation, 13 September 2026 UTC                   | Dated audit result; advisory data can change                          |
+| Development dependencies        | Four moderate advisories remained in the Drizzle Kit / legacy esbuild dependency chain at implementation close | No incompatible override or forced downgrade applied                  |
+| Browser/mobile/accessibility QA | **Not performed**; browser tooling was unavailable                                                             | Responsive CSS, dialogs, touch behavior and focus remain unverified   |
 
 ### Engine coverage
 
@@ -102,20 +125,20 @@ It does **not** verify two independent users, full hosted combat, every malforme
 
 ## Known issues and limitations
 
-| ID      | Priority | Finding                                                                                                                                        | Status / next action                                                                                                                                        |
-| ------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| QA-01   | P0       | No desktop/mobile browser journey has been verified                                                                                            | Open; run the [P0 acceptance pass](PLAN.md#p0--verify-and-stabilize-the-private-mvp)                                                                        |
-| ECON-01 | P1       | A full inventory makes the final dungeon relic convert to gold and return `null`; the `!loot` fallback can then award another drop/conversion  | Identified by source review while preparing these documents; reproduce with a regression test, then separate reward-awarded state from the returned item ID |
-| ECON-02 | P1       | Overflow conversion adds to the player's gold but not `battle.gold`; the report can understate the total credited reward                       | Identified by source review; add an explicit reward breakdown and reconcile displayed totals                                                                |
-| SAVE-01 | P1       | Broader save JSON still lacks a complete runtime schema, corrupt-save recovery, and backup/export. A minimal `saveVersion` 1 appearance migration now exists for U0. | Keep the appearance normalizer; complete P1 versioning, validation and recovery separately |
-| API-01  | P1       | Top-level request checks and action eligibility exist, but not a complete runtime action schema; body length is checked after reading the body | Open before wider access; add bounded parsing and validation cases                                                                                          |
-| API-02  | P2       | Unauthenticated GET returns `401`, while unauthenticated POST currently becomes `400`                                                          | Open; normalize identity errors and document a stable contract                                                                                              |
-| API-03  | P1       | Duplicate suppression remembers only the last action ID, not an action ledger or payload fingerprint                                           | Current boundary; define retry semantics and test them before broader clients are added                                                                     |
-| TEST-01 | P1       | API smoke checks share the dev identity, overwrite its name, and assume the dungeon quest is unearned                                          | Open; isolate fixtures and make tests repeatable regardless of prior gameplay                                                                               |
-| ART-01  | P2       | Later enemies reuse portraits; later landscapes reuse treated art; the dungeon boss lacks a distinct portrait                                  | Known MVP compromise; create content-specific assets after gameplay verification                                                                            |
-| BAL-01  | P1       | Full campaign progression, economic sustainability, and recovery pacing have not been measured with players                                    | Open; collect timed playtest evidence before changing target values                                                                                         |
-| OPS-01  | P1       | Backup/restore, save export, monitoring, rate limits, and load behavior are not established                                                    | Open before expanding access; verify recovery procedures                                                                                                    |
-| DEP-01  | P2       | The last dependency audit retained four moderate development-only advisories                                                                   | Recheck the current dependency chain before the next release; avoid claiming the dated audit is current                                                     |
+| ID      | Priority | Finding                                                                                                                                                              | Status / next action                                                                                                                                        |
+| ------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| QA-01   | P0       | No desktop/mobile browser journey has been verified                                                                                                                  | Open; run the [P0 acceptance pass](PLAN.md#p0--verify-and-stabilize-the-private-mvp)                                                                        |
+| ECON-01 | P1       | A full inventory makes the final dungeon relic convert to gold and return `null`; the `!loot` fallback can then award another drop/conversion                        | Identified by source review while preparing these documents; reproduce with a regression test, then separate reward-awarded state from the returned item ID |
+| ECON-02 | P1       | Overflow conversion adds to the player's gold but not `battle.gold`; the report can understate the total credited reward                                             | Identified by source review; add an explicit reward breakdown and reconcile displayed totals                                                                |
+| SAVE-01 | P1       | Broader save JSON still lacks a complete runtime schema, corrupt-save recovery, and backup/export. A minimal `saveVersion` 1 appearance migration now exists for U0. | Keep the appearance normalizer; complete P1 versioning, validation and recovery separately                                                                  |
+| API-01  | P1       | Top-level request checks and action eligibility exist, but not a complete runtime action schema; body length is checked after reading the body                       | Open before wider access; add bounded parsing and validation cases                                                                                          |
+| API-02  | P2       | Unauthenticated GET returns `401`, while unauthenticated POST currently becomes `400`                                                                                | Open; normalize identity errors and document a stable contract                                                                                              |
+| API-03  | P1       | Duplicate suppression remembers only the last action ID, not an action ledger or payload fingerprint                                                                 | Current boundary; define retry semantics and test them before broader clients are added                                                                     |
+| TEST-01 | P1       | API smoke checks share the dev identity, overwrite its name, and assume the dungeon quest is unearned                                                                | Open; isolate fixtures and make tests repeatable regardless of prior gameplay                                                                               |
+| ART-01  | P2       | Later enemies reuse portraits; later landscapes reuse treated art; the dungeon boss lacks a distinct portrait                                                        | Known MVP compromise; create content-specific assets after gameplay verification                                                                            |
+| BAL-01  | P1       | Full campaign progression, economic sustainability, and recovery pacing have not been measured with players                                                          | Open; collect timed playtest evidence before changing target values                                                                                         |
+| OPS-01  | P1       | Backup/restore, save export, monitoring, rate limits, and load behavior are not established                                                                          | Open before expanding access; verify recovery procedures                                                                                                    |
+| DEP-01  | P2       | The last dependency audit retained four moderate development-only advisories                                                                                         | Recheck the current dependency chain before the next release; avoid claiming the dated audit is current                                                     |
 
 U0 is the next requested product milestone; P0 remains the private-MVP correctness gate; P1 follows or supports it before wider testing; P2 can follow once the core journey is dependable. These priorities are not claims of observed production incidents.
 

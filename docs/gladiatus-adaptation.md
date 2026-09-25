@@ -1,13 +1,13 @@
 # Gladiatus → Mobarez feature adaptation
 
 **Date:** 14 September 2026  
-**Status:** Product inventory and phased plan. Not implemented.  
+**Status:** G1, G2 and most of G3/G4 implemented in version 0.2 (24 September 2026) — see [PROGRESS.md](../PROGRESS.md). Not yet built: dungeon second loadout, scrolls, durability, underworld, G5 social systems.  
 **Reference playbook:** [Gladiatus wiki (gamerz-bg)](https://gladiatus.gamerz-bg.com/) — a fansite, not a private server.  
 **Interactive catalog:** open the feature map canvas beside chat.
 
 [Project overview](../README.md) · [Delivery plan](../PLAN.md) · [Earlier research](research.md)
 
-This document is the product answer to “make the game base like Gladiatus, and add as many of those features as we can.” It is an original Iranian PvE design that reuses Gladiatus *loops*, not Gameforge assets, copy, formulas, or Roman setting.
+This document is the product answer to “make the game base like Gladiatus, and add as many of those features as we can.” It is an original Iranian PvE design that reuses Gladiatus _loops_, not Gameforge assets, copy, formulas, or Roman setting.
 
 ## 1. What “game base like Gladiatus” means
 
@@ -25,7 +25,7 @@ Mobarez already has (3) in miniature: three regions, three equipment slots, shar
 ### Adaptation rules
 
 - Keep Persian RTL, olive/gold UI, original art, and server-owned combat/economy.
-- Give every borrowed *system* an Iranian name and fiction. Working labels below are not final copy.
+- Give every borrowed _system_ an Iranian name and fiction. Working labels below are not final copy.
 - Do not copy Gladiatus item names, NPC names, provinces, gods-as-Rome, sprites, or numeric formulas.
 - Do not use any religion as a hostile target. Yazata / myth flavor is setting, not an attack list.
 - Do not add a ruby / Centurio / real-money analog.
@@ -33,15 +33,15 @@ Mobarez already has (3) in miniature: three regions, three equipment slots, shar
 
 ## 2. Current vs target shell
 
-| Gladiatus surface | Mobarez today | Target |
-| ----------------- | ------------- | ------ |
-| Town view | Flat tabs | **شهر**: پهلوان, تمرین‌گاه, بازار, معبد, کار, بسته‌ها |
-| Country view | Expeditions + dungeon mixed into the same chrome | **کشور**: لشکرکشی, سیاه‌چال, سفر |
-| Overview | Full-body, 3 slots, list inventory | Figure + 6 then 10 slots + bag grid |
-| Points | One energy pool of 12 | Expedition energy **and** dungeon points |
-| Honour / fame | None | **آبرو** from expeditions; **نام** from dungeons |
-| Packages | Loot lands in inventory | **بسته‌ها** inbox with expiry → vendor gold |
-| Work | None | **کار**: timed gold, hero unavailable for fights |
+| Gladiatus surface | Mobarez today                                    | Target                                                |
+| ----------------- | ------------------------------------------------ | ----------------------------------------------------- |
+| Town view         | Flat tabs                                        | **شهر**: پهلوان, تمرین‌گاه, بازار, معبد, کار, بسته‌ها |
+| Country view      | Expeditions + dungeon mixed into the same chrome | **کشور**: لشکرکشی, سیاه‌چال, سفر                      |
+| Overview          | Full-body, 3 slots, list inventory               | Figure + 6 then 10 slots + bag grid                   |
+| Points            | One energy pool of 12                            | Expedition energy **and** dungeon points              |
+| Honour / fame     | None                                             | **آبرو** from expeditions; **نام** from dungeons      |
+| Packages          | Loot lands in inventory                          | **بسته‌ها** inbox with expiry → vendor gold           |
+| Work              | None                                             | **کار**: timed gold, hero unavailable for fights      |
 
 ## 3. Feature waves
 
@@ -53,20 +53,20 @@ Character identity is in source and still needs private release and the UX matri
 
 ### G1 — Game shell (do this next)
 
-This is the “game base.” It changes how the product *feels* even before more content exists.
+This is the “game base.” It changes how the product _feels_ even before more content exists.
 
-| System | Iranian working name | Scope |
-| ------ | -------------------- | ----- |
-| Dual view navigation | شهر / کشور | Persistent chrome; current screens re-homed, not deleted |
-| Resource bar | نوار منابع | Gold, health, expedition energy, dungeon points, honour |
-| Six equipment slots | جایگاه‌ها | Weapon, shield, helm, armor, boots, charm |
-| Bag grid | کیسه‌ها | Two 5×8 bags; one cell per item |
-| Package inbox | بسته‌ها | Loot/shop/forge output; 7-day expiry sells for vendor gold |
-| Work | کار | Commit time for gold; cancel or finish before fighting |
-| Honour | آبرو | Score from expedition wins; shown on overview |
-| Split points | نیرو / امتیاز سیاه‌چال | Dungeon no longer spends the same pool as expeditions |
-| Food as items | خوراک | Replace the bare counter so later foods can differ |
-| Overview panels | آمار / پیروزی‌ها | Derived stats and win counts on پهلوان |
+| System               | Iranian working name   | Scope                                                      |
+| -------------------- | ---------------------- | ---------------------------------------------------------- |
+| Dual view navigation | شهر / کشور             | Persistent chrome; current screens re-homed, not deleted   |
+| Resource bar         | نوار منابع             | Gold, health, expedition energy, dungeon points, honour    |
+| Six equipment slots  | جایگاه‌ها              | Weapon, shield, helm, armor, boots, charm                  |
+| Bag grid             | کیسه‌ها                | Two 5×8 bags; one cell per item                            |
+| Package inbox        | بسته‌ها                | Loot/shop/forge output; 7-day expiry sells for vendor gold |
+| Work                 | کار                    | Commit time for gold; cancel or finish before fighting     |
+| Honour               | آبرو                   | Score from expedition wins; shown on overview              |
+| Split points         | نیرو / امتیاز سیاه‌چال | Dungeon no longer spends the same pool as expeditions      |
+| Food as items        | خوراک                  | Replace the bare counter so later foods can differ         |
+| Overview panels      | آمار / پیروزی‌ها       | Derived stats and win counts on پهلوان                     |
 
 **Out of G1:** extra provinces, affixes, mercenaries, forge, arena, drag-and-drop, 1–6 cell item sizes.
 
@@ -76,23 +76,23 @@ This is the “game base.” It changes how the product *feels* even before more
 
 ### G2 — PvE depth
 
-| System | Iranian working name | Scope |
-| ------ | -------------------- | ----- |
-| Fourth expedition fight | فرمانده | Reveal a commander after the three current enemies |
-| More provinces | استان‌ها | Original Iranian regions with original opponents |
-| Opponent knowledge | شناخت دشمن | Repeat fights to reveal extra loot/report facts |
-| Travel | سفر | Gold or time once travel distance matters |
-| Temple missions | معبد | Daily / time-limited quests; keep the five story quests |
-| Blessings | برکت | Timed consumable buffs, **not** wardrobe combat bonuses |
-| Wear level | سطح پوشیدن | Original band so shop and drops stay wearable |
-| Prefix / suffix | پیشوند / پسوند | Named affixes on loot; see [§8](#8-item-prefix-and-suffix) |
-| Item quality | درجه | Six colours that scale affix stats; see [§8](#8-item-prefix-and-suffix) |
-| Six stats | شش خوی | Add **فرّه** and **خرد** beside the current four; see [§9](#9-six-character-stats) |
-| Honour titles | لقب | Rank + selectable titles that grant small bonuses; see [§10](#10-character-titles) |
-| Rotating vendors | فروشندگان | Server-priced stock that refreshes |
-| Events | رویداد | Operator-scheduled extra expedition or training discount |
-| Achievements | دستاوردها | Unlock titles; not a second gold printer |
-| Hit / block / double-hit | ضرب / سد / ضربت دوگانه | Hit and block from agility/strength; double-hit from فرّه |
+| System                   | Iranian working name   | Scope                                                                              |
+| ------------------------ | ---------------------- | ---------------------------------------------------------------------------------- |
+| Fourth expedition fight  | فرمانده                | Reveal a commander after the three current enemies                                 |
+| More provinces           | استان‌ها               | Original Iranian regions with original opponents                                   |
+| Opponent knowledge       | شناخت دشمن             | Repeat fights to reveal extra loot/report facts                                    |
+| Travel                   | سفر                    | Gold or time once travel distance matters                                          |
+| Temple missions          | معبد                   | Daily / time-limited quests; keep the five story quests                            |
+| Blessings                | برکت                   | Timed consumable buffs, **not** wardrobe combat bonuses                            |
+| Wear level               | سطح پوشیدن             | Original band so shop and drops stay wearable                                      |
+| Prefix / suffix          | پیشوند / پسوند         | Named affixes on loot; see [§8](#8-item-prefix-and-suffix)                         |
+| Item quality             | درجه                   | Six colours that scale affix stats; see [§8](#8-item-prefix-and-suffix)            |
+| Six stats                | شش خوی                 | Add **فرّه** and **خرد** beside the current four; see [§9](#9-six-character-stats) |
+| Honour titles            | لقب                    | Rank + selectable titles that grant small bonuses; see [§10](#10-character-titles) |
+| Rotating vendors         | فروشندگان              | Server-priced stock that refreshes                                                 |
+| Events                   | رویداد                 | Operator-scheduled extra expedition or training discount                           |
+| Achievements             | دستاوردها              | Unlock titles; not a second gold printer                                           |
+| Hit / block / double-hit | ضرب / سد / ضربت دوگانه | Hit and block from agility/strength; double-hit from فرّه                          |
 
 **Costume rule:** پوشاک stays cosmetic. If Gladiatus-style combat outfits are wanted, they are a separate timed **برکت** item, not a wardrobe toggle that replaces balance.
 
@@ -100,12 +100,12 @@ This is the “game base.” It changes how the product *feels* even before more
 
 ### G3 — Party dungeon
 
-| System | Iranian working name | Scope |
-| ------ | -------------------- | ----- |
-| Dungeon loadout | پیکر سیاه‌چال | Second equipment set; stats still clone the hero |
-| Companions | همراهان | Up to four NPC hires, tank / heal / damage |
-| Fame | نام | Dungeon prestige, distinct from honour |
-| Harder branch | دو سطح | Advanced dungeon after the party can clear the current three stages |
+| System          | Iranian working name | Scope                                                               |
+| --------------- | -------------------- | ------------------------------------------------------------------- |
+| Dungeon loadout | پیکر سیاه‌چال        | Second equipment set; stats still clone the hero                    |
+| Companions      | همراهان              | Up to four NPC hires, tank / heal / damage                          |
+| Fame            | نام                  | Dungeon prestige, distinct from honour                              |
+| Harder branch   | دو سطح               | Advanced dungeon after the party can clear the current three stages |
 
 فرّه already feeds dungeon threat; خرد already feeds healing. G3 uses those stats instead of inventing a seventh.
 
@@ -113,25 +113,25 @@ This is the “game base.” It changes how the product *feels* even before more
 
 ### G4 — Craft and late PvE
 
-| System | Iranian working name | Scope |
-| ------ | -------------------- | ----- |
-| Forge / smelt | آهنگری / گداز | Materials + chance; failure must not print gold |
-| Scrolls | طومار | Recipes as items |
-| Durability / repair | دوام / تعمیر | Only after forge exists |
-| Underworld analog | جهان زیرین | High-level PvE layer, Iranian fiction |
-| Travel NPC | گوشه‌نشین | Paid travel / optional rename token if identity is public |
+| System              | Iranian working name | Scope                                                     |
+| ------------------- | -------------------- | --------------------------------------------------------- |
+| Forge / smelt       | آهنگری / گداز        | Materials + chance; failure must not print gold           |
+| Scrolls             | طومار                | Recipes as items                                          |
+| Durability / repair | دوام / تعمیر         | Only after forge exists                                   |
+| Underworld analog   | جهان زیرین           | High-level PvE layer, Iranian fiction                     |
+| Travel NPC          | گوشه‌نشین            | Paid travel / optional rename token if identity is public |
 
 ### G5 — Social (explicit go-ahead)
 
 These systems need more than one owned save and a P3 identity model. They change Mobarez from a private PvE RPG into a shared world.
 
-| System | Iranian working name | Default |
-| ------ | -------------------- | ------- |
-| Arena | میدان | **Later, only if you say yes.** Asynchronous attacks, gold plunder rules, honour |
-| Companion arena | آوردگاه همراهان | After G3 |
-| Guilds | دسته | Shared buildings, bank, donations |
-| Player market / auction | بازار بازیکنان / حراج | Level-visibility bands so high gear cannot be handed down freely |
-| Highscores / familia | رده‌بندی / خاندان | Boards after honour and fame exist |
+| System                  | Iranian working name  | Default                                                                          |
+| ----------------------- | --------------------- | -------------------------------------------------------------------------------- |
+| Arena                   | میدان                 | **Later, only if you say yes.** Asynchronous attacks, gold plunder rules, honour |
+| Companion arena         | آوردگاه همراهان       | After G3                                                                         |
+| Guilds                  | دسته                  | Shared buildings, bank, donations                                                |
+| Player market / auction | بازار بازیکنان / حراج | Level-visibility bands so high gear cannot be handed down freely                 |
+| Highscores / familia    | رده‌بندی / خاندان     | Boards after honour and fame exist                                               |
 
 **Still never:** rubies, Centurio, recruiting, speed-server forks, Gameforge art.
 
@@ -146,29 +146,29 @@ These systems need more than one owned save and a P3 identity model. They change
 
 ## 5. Suggested Iranian names (working)
 
-| Gladiatus | Mobarez |
-| --------- | ------- |
-| Overview | پهلوان |
-| Expeditions | لشکرکشی |
-| Dungeon | سیاه‌چال |
-| Circus Turma | آوردگاه همراهان |
-| Arena | میدان |
-| Guild | دسته |
-| Pantheon | معبد |
-| Packages | بسته‌ها |
-| Work / stable | کار |
-| Auction House | حراج |
-| Forge | آهنگری |
-| Hermit | گوشه‌نشین |
-| Honour | آبرو |
-| Fame | نام |
-| Current title | لقب |
-| Prefix / suffix | پیشوند / پسوند |
-| Charisma | فرّه |
-| Intelligence | خرد |
-| Mercenaries | همراهان |
-| Underworld | جهان زیرین |
-| Centurio | *(none)* |
+| Gladiatus       | Mobarez         |
+| --------------- | --------------- |
+| Overview        | پهلوان          |
+| Expeditions     | لشکرکشی         |
+| Dungeon         | سیاه‌چال        |
+| Circus Turma    | آوردگاه همراهان |
+| Arena           | میدان           |
+| Guild           | دسته            |
+| Pantheon        | معبد            |
+| Packages        | بسته‌ها         |
+| Work / stable   | کار             |
+| Auction House   | حراج            |
+| Forge           | آهنگری          |
+| Hermit          | گوشه‌نشین       |
+| Honour          | آبرو            |
+| Fame            | نام             |
+| Current title   | لقب             |
+| Prefix / suffix | پیشوند / پسوند  |
+| Charisma        | فرّه            |
+| Intelligence    | خرد             |
+| Mercenaries     | همراهان         |
+| Underworld      | جهان زیرین      |
+| Centurio        | _(none)_        |
 
 ## 6. Engine and save implications
 
@@ -217,16 +217,16 @@ An equipped or bag item is:
 `itemLevel = baseLevel + prefixLevel + suffixLevel`  
 `stats = qualityMultiplier × (base + prefix + suffix)`, after slot bans.
 
-| Degree | Working name | Role |
-| ------ | ------------ | ---- |
-| 0 | ساده | Base only, no affix. Starter iron blade stays here. |
-| 1 | فیروزه | Floor for any item that rolled a prefix or suffix. |
-| 2 | لاجورد | Common upgrade; bosses bias here. |
-| 3 | ارغوان | Rare. |
-| 4 | کهربا | Very rare. |
-| 5 | یاقوت | Forge-era; do not drop in G2. |
+| Degree | Working name | Role                                                |
+| ------ | ------------ | --------------------------------------------------- |
+| 0      | ساده         | Base only, no affix. Starter iron blade stays here. |
+| 1      | فیروزه       | Floor for any item that rolled a prefix or suffix.  |
+| 2      | لاجورد       | Common upgrade; bosses bias here.                   |
+| 3      | ارغوان       | Rare.                                               |
+| 4      | کهربا        | Very rare.                                          |
+| 5      | یاقوت        | Forge-era; do not drop in G2.                       |
 
-Start with about **12 prefixes and 12 suffixes**, not 200. Original Iranian words, not Lucius / Fatuity / Ceres. Examples of *tone* only: خورشید، سیمرغ، دیوبند، سرو as prefixes; بخت، فرّه، آهن، صبر as suffixes. Final copy is a writing pass.
+Start with about **12 prefixes and 12 suffixes**, not 200. Original Iranian words, not Lucius / Fatuity / Ceres. Examples of _tone_ only: خورشید، سیمرغ، دیوبند، سرو as prefixes; بخت، فرّه، آهن، صبر as suffixes. Final copy is a writing pass.
 
 Affix effects (keep the set small):
 
@@ -237,12 +237,12 @@ Affix effects (keep the set small):
 
 Slot bans (Mobarez version of the Gladiatus rule):
 
-| Slot | Cannot roll |
-| ---- | ----------- |
-| زره | چابکی٪ |
-| سپر | فرّه٪ |
-| کفش | بخت٪ |
-| طلسم / انگشتر | قدرت٪ |
+| Slot          | Cannot roll |
+| ------------- | ----------- |
+| زره           | چابکی٪      |
+| سپر           | فرّه٪       |
+| کفش           | بخت٪        |
+| طلسم / انگشتر | قدرت٪       |
 
 G2 loot pipeline: expedition drop rolls base for the enemy’s slot table, then 0–2 affixes, then quality. If any affix is present, quality is at least فیروزه. Existing eight named items migrate to `baseId` with empty affixes and today’s rarity mapped onto ساده / فیروزه / لاجورد.
 
@@ -254,16 +254,16 @@ Do not let the client send a finished stat block. The engine looks up prefix/suf
 
 Gladiatus trains six stats from 5 each: Strength, Dexterity, Agility, Constitution, Charisma, Intelligence. Mobarez currently trains four: قدرت، چابکی، استقامت، بخت.
 
-G2 adds the two missing *roles* without deleting بخت:
+G2 adds the two missing _roles_ without deleting بخت:
 
-| Stat | Persian | What it does in Mobarez |
-| ---- | ------- | ----------------------- |
-| Strength | قدرت | Damage and block |
-| Agility | چابکی | Dodge and anti-crit |
-| Vitality | استقامت | Max health and regen |
-| Luck | بخت | Crit chance (kept; Gladiatus folds this into dexterity) |
-| Charisma | فرّه | Double-hit; later dungeon threat |
-| Intelligence | خرد | Opponent knowledge, food healing, later companion healing |
+| Stat         | Persian | What it does in Mobarez                                   |
+| ------------ | ------- | --------------------------------------------------------- |
+| Strength     | قدرت    | Damage and block                                          |
+| Agility      | چابکی   | Dodge and anti-crit                                       |
+| Vitality     | استقامت | Max health and regen                                      |
+| Luck         | بخت     | Crit chance (kept; Gladiatus folds this into dexterity)   |
+| Charisma     | فرّه    | Double-hit; later dungeon threat                          |
+| Intelligence | خرد     | Opponent knowledge, food healing, later companion healing |
 
 Do not add a separate dexterity until playtests show hit-chance needs its own gold sink. Hit chance in G2 can use چابکی versus the enemy’s چابکی.
 
@@ -278,20 +278,20 @@ Two Gladiatus facts:
 - **Honour does not raise stats.** It only sorts the highscore. ([game guide](https://gladiatus.gamerz-bg.com/game-guide))
 - Characters still have a **Current Title** on the achievements page (event and milestone titles such as Champion of Rome, Curse of the Underworld). Those titles are mostly display.
 
-Mobarez will use titles as a real progression layer, because the request is titles that *improve* the character, including فرّه and the other stats.
+Mobarez will use titles as a real progression layer, because the request is titles that _improve_ the character, including فرّه and the other stats.
 
 ### Rank titles (automatic)
 
 Unlocked by **آبرو** thresholds. Always visible. The highest unlocked rank is the default title if nothing else is equipped.
 
-| Honour | Title | Bonus (one rank at a time) |
-| ------ | ----- | -------------------------- |
-| 0 | تازه‌کار | none |
-| 80 | جنگجو | +1 بخت |
-| 250 | پهلوان | +1 قدرت |
-| 600 | نامدار | +1 فرّه |
-| 1 200 | جهان‌پهلوان | +2 فرّه |
-| 2 500 | افسانه‌ای | +2 فرّه، +1 خرد |
+| Honour | Title       | Bonus (one rank at a time) |
+| ------ | ----------- | -------------------------- |
+| 0      | تازه‌کار    | none                       |
+| 80     | جنگجو       | +1 بخت                     |
+| 250    | پهلوان      | +1 قدرت                    |
+| 600    | نامدار      | +1 فرّه                    |
+| 1 200  | جهان‌پهلوان | +2 فرّه                    |
+| 2 500  | افسانه‌ای   | +2 فرّه، +1 خرد            |
 
 Thresholds are placeholders until G2 balance. Only the current rank bonus applies; ranks do not stack.
 
@@ -301,13 +301,13 @@ Quests, dungeon clears, commanders, and later events grant **لقب** IDs. The p
 
 Starter earned titles (working):
 
-| Unlock | Title | Bonus |
-| ------ | ----- | ----- |
-| Claim نخستین گام | نخستین گام | +1 بخت |
-| First dungeon relic | نگاهبانِ سیمرغ | +1 استقامت |
-| Defeat the Pars commander | دشت‌بان | +1 قدرت |
-| Learn all bonuses on one enemy | راوی | +1 خرد |
-| Reach the آبرو نامدار rank | فرّه‌مند | +2 فرّه |
+| Unlock                         | Title          | Bonus      |
+| ------------------------------ | -------------- | ---------- |
+| Claim نخستین گام               | نخستین گام     | +1 بخت     |
+| First dungeon relic            | نگاهبانِ سیمرغ | +1 استقامت |
+| Defeat the Pars commander      | دشت‌بان        | +1 قدرت    |
+| Learn all bonuses on one enemy | راوی           | +1 خرد     |
+| Reach the آبرو نامدار rank     | فرّه‌مند       | +2 فرّه    |
 
 Later events add more titles. No title grants gold, energy, or extra loot rolls.
 

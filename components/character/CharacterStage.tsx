@@ -25,9 +25,13 @@ export function CharacterStage({
   return (
     <figure className={'character-stage' + (preview ? ' previewing' : '')}>
       <figcaption>{label}</figcaption>
-      {preview && <span className="preview-flag">پیش‌نمایش — هنوز ثبت نشده</span>}
+      {preview && (
+        <span className="preview-flag">پیش‌نمایش — هنوز ثبت نشده</span>
+      )}
       {failed ? (
-        <p className="stage-missing">ظاهر پهلوان بارگذاری نشد. بعداً دوباره تلاش کن.</p>
+        <p className="stage-missing">
+          ظاهر پهلوان بارگذاری نشد. بعداً دوباره تلاش کن.
+        </p>
       ) : (
         <>
           <img

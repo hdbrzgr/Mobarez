@@ -11,6 +11,7 @@ import {
   type Gender,
   type Slot,
 } from '@/lib/game/content';
+import type { ItemInstance } from '@/lib/game/engine';
 import { characterLayers } from '@/lib/game/character-art';
 
 export function CharacterCreation({
@@ -23,7 +24,7 @@ export function CharacterCreation({
   defaultName: string;
   returning: boolean;
   busy: boolean;
-  equipment: Record<Slot, string | null>;
+  equipment: Record<Slot, ItemInstance | null>;
   onSubmit: (gender: Gender, name: string) => void;
 }) {
   const [gender, setGender] = useState<Gender | null>(null);
